@@ -30,7 +30,7 @@ def stock_government_trades():
         condition = bool(response.status_code == 200 and str(response.text) != "[]")
         return condition
     
-    @task(retries=0, retry_delay=60)
+    @task(retries=5, retry_delay=60)
     def get_government_trades(ds: str):
         api = BaseHook.get_connection('government_api')
         api_key = api.extra_dejson["government_api_key"]
@@ -55,7 +55,7 @@ def stock_government_trades():
 
         return trades
 
-    @task(retries=0, retry_delay=60)
+    @task(retries=5, retry_delay=60)
     def store_government_trades(trades, ds):
         s3 = boto3.client("s3", aws_access_key_id=AWS_KEY, aws_secret_access_key=AWS_SECRET_KEY)
         bucket_name = "government-trades"
