@@ -20,10 +20,10 @@ AWS_SECRET_KEY = Variable.get("AWS_SECRET_KEY")
 def stock_market_tickers():
     
     @task.sensor(poke_interval=30, timeout=300, mode='poke')
-    def is_api_available(ds: str):
+    def is_ticker_api_available(ds: str):
         endpoint = "/v3/reference/tickers?type=CS&market=stocks&active=true&limit=1&"
         api = BaseHook.get_connection('stock_api')
-        api_key = api.extra_dejson["api_key"]
+        api_key = api.extra_dejson["stock_api_key"]
         url = f"{api.host}{endpoint}&date={ds}&apiKey={api_key}"
 
         response = requests.get(url=url)
@@ -69,11 +69,11 @@ def stock_market_tickers():
 
             # Specify compression type
             s3.put_object(Body=buffer, Bucket=bucket_name, Key=key, ContentEncoding='gzip')
-        except botocore.exceptions.ClientError as e:
-            print(f"Error uploading key: {key}; error: {e}")
+        except botocore.exceptions.ClientError as error:
+            print(f"Error uploading key: {key}; error: {error}")
 
     # Set task dependencies
-    is_api_available() >> store_stock_tickers(get_stock_tickers())
+    is_ticker_api_available() >> store_stock_tickers(get_stock_tickers())
 
 # Run the DAG
 stock_market_tickers()
