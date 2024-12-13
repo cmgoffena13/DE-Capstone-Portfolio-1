@@ -14,7 +14,7 @@ def fetch_with_retries(url, max_retries=10, initial_delay=12):
             jittered_delay = random.uniform(initial_delay-1, initial_delay)
             expo = 2 ** retries
             wait_time = int(response.headers.get("Retry-After", jittered_delay * expo))
-            print(f"Rate Limited: Retrying in {wait_time:.2f} seconds...")
+            print(f"Rate Limited: Retrying in {wait_time:.2f} seconds... Function Retries Left: {max_retries - retries}")
             time.sleep(wait_time)
             retries += 1
         elif response.status_code == 200:
