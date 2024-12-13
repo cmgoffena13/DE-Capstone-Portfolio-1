@@ -71,9 +71,26 @@ def stock_market_tickers():
             s3.put_object(Body=buffer, Bucket=bucket_name, Key=key, ContentEncoding='gzip')
         except botocore.exceptions.ClientError as error:
             print(f"Error uploading key: {key}; error: {error}")
+        return (bucket_name, key)
+
+    @task
+    def format_stock_tickers(address):
+        bucket_name, key = address
+        s3 = boto3.client("s3", aws_access_key_id=AWS_KEY, aws_secret_access_key=AWS_SECRET_KEY)
+        tickers = s3.get_object(Bucket=bucket_name, Key=key)
+
+        with gzip.GzipFile(fileobj=tickers["Body"]) as gzipped_file:
+            data = json.load(gzipped_file)
+
+        print(data)
+
 
     # Set task dependencies
-    is_ticker_api_available() >> store_stock_tickers(get_stock_tickers())
+    is_ticker_api_available() >> \
+        format_stock_tickers(
+            store_stock_tickers(
+                get_stock_tickers()
+                ))
 
 # Run the DAG
 stock_market_tickers()
