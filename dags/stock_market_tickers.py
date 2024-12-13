@@ -6,14 +6,10 @@ import gzip
 import io
 from airflow.decorators import dag, task
 from airflow.hooks.base import BaseHook
-from airflow.models import Variable
 from datetime import datetime
 from helpers.utils import fetch_with_retries
-
-
-# Import Variables from Airflow
-AWS_KEY = Variable.get("AWS_KEY")
-AWS_SECRET_KEY = Variable.get("AWS_SECRET_KEY")
+from helpers.config import SNOWFLAKE_CREDS, AWS_KEY, AWS_SECRET_KEY, SF_DATABASE, SF_SCHEMA
+from snowflake.snowpark import Session
 
 
 @dag(start_date=datetime(2024,1,1), schedule='@daily', catchup=False, tags=['stock_market'])
@@ -33,7 +29,7 @@ def stock_market_tickers():
     @task(retries=5, retry_delay=60)
     def get_stock_tickers(ds: str):
         api = BaseHook.get_connection('stock_api')
-        api_key = api.extra_dejson["api_key"]
+        api_key = api.extra_dejson["stock_api_key"]
         endpoint = f"/v3/reference/tickers?type=CS&market=stocks&active=true&limit=1000&date={ds}&apiKey={api_key}"
 
         url = f"{api.host}{endpoint}"
@@ -73,8 +69,8 @@ def stock_market_tickers():
             print(f"Error uploading key: {key}; error: {error}")
         return (bucket_name, key)
 
-    @task
-    def format_stock_tickers(address):
+    @task(retries=5, retry_delay=60)
+    def sf_insert_stock_tickers(address):
         bucket_name, key = address
         s3 = boto3.client("s3", aws_access_key_id=AWS_KEY, aws_secret_access_key=AWS_SECRET_KEY)
         tickers = s3.get_object(Bucket=bucket_name, Key=key)
@@ -82,15 +78,31 @@ def stock_market_tickers():
         with gzip.GzipFile(fileobj=tickers["Body"]) as gzipped_file:
             data = json.load(gzipped_file)
 
-        print(data)
+        session = Session.builder.configs(SNOWFLAKE_CREDS).create()
 
+        df = session.create_dataframe(data)
+
+        table_name = "stock_tickers"
+
+        session.sql(f"USE DATABASE {SF_DATABASE}").collect()
+        session.sql(f"USE SCHEMA {SF_SCHEMA}").collect()
+
+        result = session.sql(f"SHOW TABLES LIKE '{table_name}'").collect()
+
+        # Check if the table exists, create it only if it doesn't
+        if result:
+            df.write.mode("overwrite").save_as_table(table_name)
+        else:
+            df.write.mode("ignore").save_as_table(table_name)
+
+    # Set task dependencies for readability
+    api_available = is_ticker_api_available()
+    extract = get_stock_tickers()
+    store = store_stock_tickers(extract)
+    sf_insert = sf_insert_stock_tickers(store)
 
     # Set task dependencies
-    is_ticker_api_available() >> \
-        format_stock_tickers(
-            store_stock_tickers(
-                get_stock_tickers()
-                ))
+    api_available >> extract >> store >> sf_insert
 
 # Run the DAG
 stock_market_tickers()

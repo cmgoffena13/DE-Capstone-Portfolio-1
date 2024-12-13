@@ -8,12 +8,8 @@ from datetime import datetime
 from helpers.utils import fetch_with_retries
 from airflow.decorators import dag, task
 from airflow.hooks.base import BaseHook
-from airflow.models import Variable
-
-
-# Import Variables from Airflow
-AWS_KEY = Variable.get("AWS_KEY")
-AWS_SECRET_KEY = Variable.get("AWS_SECRET_KEY")
+from helpers.config import SNOWFLAKE_CREDS, AWS_KEY, AWS_SECRET_KEY, SF_DATABASE, SF_SCHEMA
+from snowflake.snowpark import Session
 
 
 @dag(start_date=datetime(2024, 1, 1), schedule='@daily', catchup=False, tags=['stock_market'])
@@ -39,18 +35,19 @@ def stock_government_trades():
         url = f"{api.host}{endpoint}"
 
         # Fetch the initial page
-        trades = fetch_with_retries(url)
+        response = fetch_with_retries(url)
+        trades = response['data']
 
         # Fetch the next pages until exhausted
         while True:
             page_number = 1
             next_url = url + f"&page={page_number}"
-            next_trades = fetch_with_retries(next_url)
+            response = fetch_with_retries(next_url)
 
-            if str(next_trades) == "[]":
+            if str(response) == "[]":
                 break
-
-            trades.extend(next_trades)
+            
+            trades.extend(response['data'])
             page_number += 1
 
         return trades
@@ -77,8 +74,40 @@ def stock_government_trades():
             s3.put_object(Body=buffer, Bucket=bucket_name, Key=key, ContentEncoding='gzip')
         except botocore.exceptions.ClientError as error:
             print(f"Error uploading key: {key}; error: {error}")
+        return (bucket_name, key)
 
 
-    is_government_api_available() >> store_government_trades(get_government_trades())
+    @task(retries=5, retry_delay=60)
+    def sf_insert_government_trades(address):
+        bucket_name, key = address
+        s3 = boto3.client("s3", aws_access_key_id=AWS_KEY, aws_secret_access_key=AWS_SECRET_KEY)
+        tickers = s3.get_object(Bucket=bucket_name, Key=key)
+
+        with gzip.GzipFile(fileobj=tickers["Body"]) as gzipped_file:
+            data = json.load(gzipped_file)
+
+        session = Session.builder.configs(SNOWFLAKE_CREDS).create()
+
+        df = session.create_dataframe(data)
+
+        table_name = "government_trades"
+
+        session.sql(f"USE DATABASE {SF_DATABASE}").collect()
+        session.sql(f"USE SCHEMA {SF_SCHEMA}").collect()
+
+        result = session.sql(f"SHOW TABLES LIKE '{table_name}'").collect()
+
+        # Check if the table exists, create it only if it doesn't
+        if result:
+            df.write.mode("overwrite").save_as_table(table_name)
+        else:
+            df.write.mode("ignore").save_as_table(table_name)
+
+    api_available = is_government_api_available()
+    extract = get_government_trades()
+    store = store_government_trades(extract)
+    sf_insert = sf_insert_government_trades(store)
+
+    api_available >> extract >> store >> sf_insert
 
 stock_government_trades()

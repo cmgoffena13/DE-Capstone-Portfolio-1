@@ -11,7 +11,7 @@ def fetch_with_retries(url, max_retries=5, initial_delay=12):
         if response.status_code == 429:
             # Retry with exponential backoff
             # Add jitter for API calls to be randomly staggered
-            jittered_delay = random.uniform(0, initial_delay)
+            jittered_delay = random.uniform(initial_delay-1, initial_delay)
             wait_time = int(response.headers.get("Retry-After", jittered_delay * (2 ** retries)))
             print(f"Rate Limited: Retrying in {wait_time:.2f} seconds...")
             time.sleep(wait_time)
