@@ -17,7 +17,7 @@ def stock_market_tickers():
     
     @task.sensor(poke_interval=30, timeout=300, mode='poke')
     def is_ticker_api_available(ds: str):
-        endpoint = "/v3/reference/tickers?type=CS&market=stocks&active=true&limit=1&"
+        endpoint = "/v3/reference/tickers?active=true&limit=1"
         api = BaseHook.get_connection('stock_api')
         api_key = api.extra_dejson["stock_api_key"]
         url = f"{api.host}{endpoint}&date={ds}&apiKey={api_key}"
@@ -26,11 +26,11 @@ def stock_market_tickers():
         condition = bool(response.json()['status'] == "OK")
         return condition
     
-    @task(retries=5, retry_delay=60)
+    @task(retries=5, retry_delay=30)
     def get_stock_tickers(ds: str):
         api = BaseHook.get_connection('stock_api')
         api_key = api.extra_dejson["stock_api_key"]
-        endpoint = f"/v3/reference/tickers?type=CS&market=stocks&active=true&limit=1000&date={ds}&apiKey={api_key}"
+        endpoint = f"/v3/reference/tickers?active=true&limit=1000&date={ds}&apiKey={api_key}"
 
         url = f"{api.host}{endpoint}"
 
@@ -45,7 +45,7 @@ def stock_market_tickers():
             tickers.extend(response['results'])
         return tickers
     
-    @task(retries=5, retry_delay=60)
+    @task(retries=5, retry_delay=30)
     def store_stock_tickers(tickers, ds):
         s3 = boto3.client("s3", aws_access_key_id=AWS_KEY, aws_secret_access_key=AWS_SECRET_KEY)
         bucket_name = "stock-tickers"
@@ -69,7 +69,7 @@ def stock_market_tickers():
             print(f"Error uploading key: {key}; error: {error}")
         return (bucket_name, key)
 
-    @task(retries=5, retry_delay=60)
+    @task(retries=5, retry_delay=30)
     def sf_insert_stock_tickers(address):
         bucket_name, key = address
         s3 = boto3.client("s3", aws_access_key_id=AWS_KEY, aws_secret_access_key=AWS_SECRET_KEY)
@@ -84,9 +84,11 @@ def stock_market_tickers():
 
         table_name = "stock_tickers"
 
+        # trigger sql statements using collect
         session.sql(f"USE DATABASE {SF_DATABASE}").collect()
         session.sql(f"USE SCHEMA {SF_SCHEMA}").collect()
 
+        # Check system tables for existence
         result = session.sql(f"SHOW TABLES LIKE '{table_name}'").collect()
 
         # Check if the table exists, create it only if it doesn't

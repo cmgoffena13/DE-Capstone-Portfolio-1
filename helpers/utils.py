@@ -3,7 +3,7 @@ import time
 import random
 
 
-def fetch_with_retries(url, max_retries=5, initial_delay=12):
+def fetch_with_retries(url, max_retries=10, initial_delay=12):
     retries = 0
     while retries < max_retries:
         response = requests.get(url)
@@ -12,7 +12,8 @@ def fetch_with_retries(url, max_retries=5, initial_delay=12):
             # Retry with exponential backoff
             # Add jitter for API calls to be randomly staggered
             jittered_delay = random.uniform(initial_delay-1, initial_delay)
-            wait_time = int(response.headers.get("Retry-After", jittered_delay * (2 ** retries)))
+            expo = 2 ** retries
+            wait_time = int(response.headers.get("Retry-After", jittered_delay * expo))
             print(f"Rate Limited: Retrying in {wait_time:.2f} seconds...")
             time.sleep(wait_time)
             retries += 1
