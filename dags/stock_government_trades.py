@@ -9,7 +9,7 @@ from datetime import datetime
 from helpers.utils import fetch_with_retries
 from airflow.decorators import dag, task
 from airflow.hooks.base import BaseHook
-from helpers.config import SNOWFLAKE_CREDS, AWS_KEY, AWS_SECRET_KEY, SF_DATABASE, SF_SCHEMA
+from helpers.config import SNOWFLAKE_CREDS, AWS_KEY, AWS_SECRET_KEY
 from snowflake.snowpark import Session
 
 

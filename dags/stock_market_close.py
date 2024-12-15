@@ -98,5 +98,4 @@ def stock_market_close():
 
     api_available >> extract >> store >> sf_insert
 
-    
 stock_market_close()
