@@ -1,6 +1,7 @@
 import requests
 import json
 import io
+import os
 import gzip
 import botocore
 import boto3
@@ -12,10 +13,10 @@ from helpers.config import SNOWFLAKE_CREDS, AWS_KEY, AWS_SECRET_KEY, SF_DATABASE
 from snowflake.snowpark import Session
 
 
-@dag(start_date=datetime(2024, 1, 1), schedule='@daily', catchup=False, tags=['stock_market'])
+@dag(start_date=datetime(2024, 1, 1), schedule='@daily', catchup=True, tags=['stock_market'])
 def stock_government_trades():
     
-    @task.sensor(poke_interval=30, timeout=300, mode='poke')
+    @task.sensor(poke_interval=5, timeout=30, mode='poke')
     def is_government_api_available(ds: str):
         endpoint = "/api/v1/gov/usa/congress/trades?pagesize=1"
         api = BaseHook.get_connection('government_api')
@@ -56,7 +57,7 @@ def stock_government_trades():
     def store_government_trades(trades, ds):
         s3 = boto3.client("s3", aws_access_key_id=AWS_KEY, aws_secret_access_key=AWS_SECRET_KEY)
         bucket_name = "government-trades"
-        key = f"{ds}/trades.json.gz" # To show that it is json compressed using gzip
+        key = f"{ds}_government_trades.json.gz" # To show that it is json compressed using gzip
 
         # turn the dictionary into a json
         json_data = json.dumps(trades)
@@ -74,39 +75,25 @@ def stock_government_trades():
             s3.put_object(Body=buffer, Bucket=bucket_name, Key=key, ContentEncoding='gzip')
         except botocore.exceptions.ClientError as error:
             print(f"Error uploading key: {key}; error: {error}")
-        return (bucket_name, key)
-
 
     @task(retries=5, retry_delay=60)
-    def sf_insert_government_trades(address):
-        bucket_name, key = address
-        s3 = boto3.client("s3", aws_access_key_id=AWS_KEY, aws_secret_access_key=AWS_SECRET_KEY)
-        tickers = s3.get_object(Bucket=bucket_name, Key=key)
-
-        with gzip.GzipFile(fileobj=tickers["Body"]) as gzipped_file:
-            data = json.load(gzipped_file)
-
+    def sf_copy_government_trades():
         session = Session.builder.configs(SNOWFLAKE_CREDS).create()
 
-        df = session.create_dataframe(data)
+        base_dir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
+        copy_into_sql_path = os.path.join(base_dir, "include/snowflake/10_GOVERNMENT_TRADES_COPY_INTO.sql")
 
-        table_name = "government_trades"
+        with open(copy_into_sql_path, 'r') as file:
+            sql_query = file.read()
 
-        session.sql(f"USE DATABASE {SF_DATABASE}").collect()
-        session.sql(f"USE SCHEMA {SF_SCHEMA}").collect()
+        session.sql(sql_query).collect()
+        session.close()
 
-        result = session.sql(f"SHOW TABLES LIKE '{table_name}'").collect()
-
-        # Check if the table exists, create it only if it doesn't
-        if result:
-            df.write.mode("overwrite").save_as_table(table_name)
-        else:
-            df.write.mode("ignore").save_as_table(table_name)
 
     api_available = is_government_api_available()
     extract = get_government_trades()
     store = store_government_trades(extract)
-    sf_insert = sf_insert_government_trades(store)
+    sf_insert = sf_copy_government_trades()
 
     api_available >> extract >> store >> sf_insert
 

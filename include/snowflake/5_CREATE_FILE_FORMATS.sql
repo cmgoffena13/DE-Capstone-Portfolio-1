@@ -1,0 +1,4 @@
+CREATE OR REPLACE FILE FORMAT file_formats.json_format
+    TYPE = 'JSON'
+    COMPRESSION = 'GZIP'
+    STRIP_OUTER_ARRAY = TRUE;

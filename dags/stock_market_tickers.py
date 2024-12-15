@@ -1,4 +1,5 @@
 import requests
+import os
 import boto3
 import botocore
 import json
@@ -15,7 +16,7 @@ from snowflake.snowpark import Session
 @dag(start_date=datetime(2024,1,1), schedule='@monthly', catchup=False, tags=['stock_market'])
 def stock_market_tickers():
     
-    @task.sensor(poke_interval=30, timeout=300, mode='poke')
+    @task.sensor(poke_interval=5, timeout=30, mode='poke')
     def is_ticker_api_available(ds: str):
         endpoint = "/v3/reference/tickers?active=true&limit=1"
         api = BaseHook.get_connection('stock_api')
@@ -48,8 +49,8 @@ def stock_market_tickers():
     @task(retries=5, retry_delay=30)
     def store_stock_tickers(tickers, ds):
         s3 = boto3.client("s3", aws_access_key_id=AWS_KEY, aws_secret_access_key=AWS_SECRET_KEY)
-        bucket_name = "stock-tickers"
-        key = f"{ds}/tickers.json.gz" # To show that it is json compressed using gzip
+        bucket_name = "polygon-stocks-1"
+        key = f"stock-tickers/{ds}_tickers.json.gz" # To show that it is json compressed using gzip
 
         # turn the dictionary into a json
         json_data = json.dumps(tickers)
@@ -67,44 +68,42 @@ def stock_market_tickers():
             s3.put_object(Body=buffer, Bucket=bucket_name, Key=key, ContentEncoding='gzip')
         except botocore.exceptions.ClientError as error:
             print(f"Error uploading key: {key}; error: {error}")
-        return (bucket_name, key)
 
     @task(retries=5, retry_delay=30)
-    def sf_insert_stock_tickers(address):
-        bucket_name, key = address
-        s3 = boto3.client("s3", aws_access_key_id=AWS_KEY, aws_secret_access_key=AWS_SECRET_KEY)
-        tickers = s3.get_object(Bucket=bucket_name, Key=key)
-
-        with gzip.GzipFile(fileobj=tickers["Body"]) as gzipped_file:
-            data = json.load(gzipped_file)
-
+    def sf_copy_stock_tickers():
         session = Session.builder.configs(SNOWFLAKE_CREDS).create()
 
-        df = session.create_dataframe(data)
+        base_dir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
+        copy_into_sql_path = os.path.join(base_dir, "include/snowflake/7_STOCK_TICKERS_COPY_INTO.sql")
 
-        table_name = "stock_tickers"
+        with open(copy_into_sql_path, 'r') as file:
+            sql_query = file.read()
 
-        # trigger sql statements using collect
-        session.sql(f"USE DATABASE {SF_DATABASE}").collect()
-        session.sql(f"USE SCHEMA {SF_SCHEMA}").collect()
+        truncate = f"TRUNCATE TABLE {SF_DATABASE}.staging.stock_tickers;"
 
-        # Check system tables for existence
-        result = session.sql(f"SHOW TABLES LIKE '{table_name}'").collect()
+        session.sql(truncate).collect()
+        session.sql(sql_query).collect()
+        session.close()
 
-        # Check if the table exists, create it only if it doesn't
-        if result:
-            df.write.mode("overwrite").save_as_table(table_name)
-        else:
-            df.write.mode("ignore").save_as_table(table_name)
+    @task(retries=5, retry_delay=30)
+    def sf_merge_stock_tickers():
+        session = Session.builder.configs(SNOWFLAKE_CREDS).create()
+
+        merge_sproc = "CALL public.merge_stock_tickers();"
+
+        session.sql(merge_sproc).collect()
+        session.close()
+
 
     # Set task dependencies for readability
     api_available = is_ticker_api_available()
     extract = get_stock_tickers()
     store = store_stock_tickers(extract)
-    sf_insert = sf_insert_stock_tickers(store)
+    sf_insert = sf_copy_stock_tickers()
+    sf_merge = sf_merge_stock_tickers()
 
     # Set task dependencies
-    api_available >> extract >> store >> sf_insert
+    api_available >> extract >> store >> sf_insert >> sf_merge
 
 # Run the DAG
 stock_market_tickers()
