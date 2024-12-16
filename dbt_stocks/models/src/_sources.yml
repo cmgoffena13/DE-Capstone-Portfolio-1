@@ -1,0 +1,10 @@
+sources:
+  - name: stock
+    schema: public
+    tables:
+      - name: tickers
+        identifier: stock_tickers
+      - name: gov_official_trades
+        identifier: government_trades
+      - name: market_close_by_day
+        identifier: market_close_by_day
