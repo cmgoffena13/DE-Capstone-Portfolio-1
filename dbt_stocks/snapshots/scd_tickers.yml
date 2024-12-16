@@ -1,4 +1,4 @@
-models:
+snapshots:
   - name: scd_tickers
     description: "Slowly Changing Dimension for all tickers available from the Polygon API"
     columns:

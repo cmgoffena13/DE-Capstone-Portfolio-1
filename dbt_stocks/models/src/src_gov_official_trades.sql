@@ -14,7 +14,7 @@ SELECT
     district,
     --headshot,
     member_record_id,
-    CASE WHEN leadership_positions = "[]" THEN NULL ELSE leadership_positions END AS leadership_positions,
+    leadership_positions,
     member_id,
     member_name,
     party,
