@@ -1,0 +1,67 @@
+models:
+  - name: scd_tickers
+    description: "Slowly Changing Dimension for all tickers available from the Polygon API"
+    columns:
+      - name: active
+        data_type: boolean
+        description: "Whether the ticker is active"
+
+      - name: base_currency_name
+        data_type: varchar
+        description: "Full name of crypto currency"
+
+      - name: base_currency_symbol
+        data_type: varchar
+        description: "Symbol for crypto currency"
+
+      - name: currency_name
+        data_type: varchar
+        description: "Currency name Ex. United States dollar"
+
+      - name: currency_symbol
+        data_type: varchar
+        description: "Currency symbol Ex. USD"
+
+      - name: last_updated_utc
+        data_type: timestamp_tz
+        description: "Last time ticker record was updated, provided by Polygon API"
+
+      - name: locale
+        data_type: varchar
+        description: "Locale of the ticker, most are global"
+
+      - name: market
+        data_type: varchar
+        description: "The specific market for the ticker Ex. stocks"
+
+      - name: name
+        data_type: varchar
+        description: "Full name of the ticker"
+
+      - name: ticker
+        data_type: varchar
+        description: "Ticker Symbol"
+
+      - name: row_hash
+        data_type: binary
+        description: "Internal Column. Hash representing database record."
+
+      - name: watermark_timestamp
+        data_type: timestamp_tz
+        description: "Internal Column. Updated by internal integration process"
+
+      - name: dbt_scd_id
+        data_type: varchar
+        description: "Internal Column. Unique identifier for each row"
+
+      - name: dbt_updated_at
+        data_type: timestamp_tz
+        description: "Internal Column. Updated by DBT when record was updated"
+
+      - name: dbt_valid_from
+        data_type: timestamp_tz
+        description: "Internal Column. When the record is valid from"
+
+      - name: dbt_valid_to
+        data_type: timestamp_tz
+        description: "Internal Column. When the record stopped being valid. NULL means record is still active"
