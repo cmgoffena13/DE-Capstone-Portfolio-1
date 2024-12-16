@@ -1,2 +1,3 @@
 # Astro Runtime includes the following pre-installed providers packages: https://www.astronomer.io/docs/astro/runtime-image-architecture#provider-packages
 snowflake-snowpark-python==1.26.0
+dbt-snowflake==1.7.1

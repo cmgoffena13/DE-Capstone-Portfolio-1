@@ -1,0 +1,13 @@
+dbt_stocks:
+  outputs:
+    dev:
+      account: 
+      database: 
+      password: 
+      role: 
+      schema: 
+      threads: 1 
+      type: sowflake
+      user: 
+      warehouse: 
+  target: dev
