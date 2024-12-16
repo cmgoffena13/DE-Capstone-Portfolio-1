@@ -42,10 +42,6 @@ snapshots:
         data_type: varchar
         description: "Ticker Symbol"
 
-      - name: row_hash
-        data_type: binary
-        description: "Internal Column. Hash representing database record."
-
       - name: watermark_timestamp
         data_type: timestamp_tz
         description: "Internal Column. Updated by internal integration process"

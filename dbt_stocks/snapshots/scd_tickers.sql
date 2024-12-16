@@ -18,8 +18,8 @@ SELECT
     Market,
     Name,
     Ticker,
-    Row_Hash,
+    --Row_Hash,
     watermark_timestamp
-FROM {{ source('stock', 'tickers') }}
+FROM {{ ref('src_tickers') }}
 
 {% endsnapshot %}

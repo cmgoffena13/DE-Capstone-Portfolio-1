@@ -1,3 +1,5 @@
+CREATE OR REPLACE SCHEMA source
+
 CREATE OR REPLACE TABLE staging.stock_tickers (
     Active BOOLEAN,
     Base_Currency_Name STRING,
@@ -13,7 +15,7 @@ CREATE OR REPLACE TABLE staging.stock_tickers (
     watermark_timestamp TIMESTAMP_TZ DEFAULT SYSTIMESTAMP()
 );
 
-CREATE OR REPLACE TABLE public.stock_tickers (
+CREATE OR REPLACE TABLE source.stock_tickers (
     Active BOOLEAN,
     Base_Currency_Name STRING,
     Base_Currency_Symbol STRING,
@@ -28,7 +30,7 @@ CREATE OR REPLACE TABLE public.stock_tickers (
     watermark_timestamp TIMESTAMP_TZ DEFAULT SYSTIMESTAMP()
 );
 
-CREATE OR REPLACE TABLE public.market_close_by_day (
+CREATE OR REPLACE TABLE source.market_close_by_day (
     status STRING,
     date_recorded DATE,
     symbol STRING,
@@ -41,7 +43,7 @@ CREATE OR REPLACE TABLE public.market_close_by_day (
     pre_Market DECIMAL(20,4)
 );
 
-CREATE OR REPLACE TABLE public.government_trades (
+CREATE OR REPLACE TABLE source.government_trades (
     amendment_number INT,
     amount STRING,
     chamber STRING,
@@ -72,4 +74,4 @@ CREATE OR REPLACE TABLE public.government_trades (
     transaction_id STRING,
     transaction_type STRING,
     record_updated BIGINT--
-)
+);

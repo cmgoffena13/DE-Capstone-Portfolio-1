@@ -1,0 +1,4 @@
+seeds:
+  - name: states
+    config:
+      schema: seeds

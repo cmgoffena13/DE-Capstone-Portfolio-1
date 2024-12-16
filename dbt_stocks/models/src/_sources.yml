@@ -1,6 +1,6 @@
 sources:
   - name: stock
-    schema: public
+    schema: source
     tables:
       - name: tickers
         identifier: stock_tickers
@@ -8,3 +8,12 @@ sources:
         identifier: government_trades
       - name: market_close_by_day
         identifier: market_close_by_day
+    
+    # Doesn't need column, checks snowflake metadata tables
+    freshness:
+      warn_after:
+        count: 1
+        period: day
+      error_after:
+        count: 2
+        period: day

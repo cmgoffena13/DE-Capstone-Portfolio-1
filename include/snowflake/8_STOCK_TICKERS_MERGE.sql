@@ -1,4 +1,4 @@
-CREATE OR REPLACE PROCEDURE merge_stock_tickers()
+CREATE OR REPLACE PROCEDURE staging.merge_stock_tickers()
   RETURNS STRING
   LANGUAGE JAVASCRIPT
   EXECUTE AS CALLER
@@ -7,7 +7,7 @@ $$
 try {
   // MERGE statement
   var merge_sql = `
-    MERGE INTO public.stock_tickers AS target
+    MERGE INTO source.stock_tickers AS target
     USING staging.stock_tickers AS source
     ON target.Ticker = source.Ticker
     WHEN MATCHED AND (target.Row_Hash != source.Row_Hash)

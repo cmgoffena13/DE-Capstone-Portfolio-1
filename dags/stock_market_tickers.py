@@ -89,7 +89,7 @@ def stock_market_tickers():
     def sf_merge_stock_tickers():
         session = Session.builder.configs(SNOWFLAKE_CREDS).create()
 
-        merge_sproc = "CALL public.merge_stock_tickers();"
+        merge_sproc = "CALL staging.merge_stock_tickers();"
 
         session.sql(merge_sproc).collect()
         session.close()

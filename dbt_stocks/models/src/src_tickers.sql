@@ -12,6 +12,6 @@ SELECT
     Market,
     Name,
     Ticker,
-    Row_Hash,
+    --Row_Hash,
     watermark_timestamp
 FROM raw_stock_tickers

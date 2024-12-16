@@ -1,4 +1,4 @@
-COPY INTO STOCK_DB.public.government_trades 
+COPY INTO STOCK_DB.source.government_trades 
 FROM (
     SELECT
         $1:amendment_number::INT AS amendment_number,

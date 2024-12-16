@@ -1,4 +1,4 @@
-COPY INTO STOCK_DB.public.market_close_by_day 
+COPY INTO STOCK_DB.source.market_close_by_day 
 FROM (
     SELECT
         $1:status::STRING AS status,

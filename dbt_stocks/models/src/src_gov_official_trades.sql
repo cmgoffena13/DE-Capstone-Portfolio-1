@@ -1,5 +1,5 @@
 /*
-Remove non-analytical columns, such as URLs
+Remove non-analytical columns, such as URLs and fix blanks space issues
 */
 WITH raw_gov_official_trades AS (
     SELECT * FROM {{ source('stock', 'gov_official_trades') }}
@@ -19,7 +19,7 @@ SELECT
     member_name,
     party,
     state,
-    TO_TIMESTAMP(member_updated) AS member_updated_utc,
+    member_updated,
     --website,
     trade_record_id,
     notification_date,
@@ -31,11 +31,6 @@ SELECT
     CASE WHEN security_type = '' THEN NULL ELSE security_type END AS security_type,
     transaction_date,
     transaction_id,
-    CASE 
-        WHEN transaction_type = 'P' THEN 'Purchase'
-        WHEN transaction_type = 'S' THEN 'Sale'
-        WHEN transaction_type = 'S (Partial)' THEN 'Partial Sale'
-        ELSE 'Unknown'
-    END AS transaction_type,
-    TO_TIMESTAMP(record_updated) AS record_upated_utc
+    transaction_type,
+    record_updated
 FROM raw_gov_official_trades
