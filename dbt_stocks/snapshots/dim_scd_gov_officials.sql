@@ -16,7 +16,7 @@ SELECT
     district,
     committees,
     leadership_positions,
-    member_updated_utc
+    CAST(member_updated_utc AS TIMESTAMP_TZ) AS member_updated_utc
 FROM {{ ref('int_gov_officials') }} AS g
 
 {% endsnapshot %}

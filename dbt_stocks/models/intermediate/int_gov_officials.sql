@@ -21,7 +21,7 @@ SELECT DISTINCT
     g.district,
     g.committees,
     g.leadership_positions,
-    TO_TIMESTAMP(g.member_updated) AS member_updated_utc
+    TO_TIMESTAMP_TZ(g.member_updated) AS member_updated_utc
 FROM gov_officials AS g
 LEFT JOIN states_CTE AS s
     ON s.state_abbrev = g.state

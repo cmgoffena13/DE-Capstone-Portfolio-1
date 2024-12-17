@@ -13,7 +13,8 @@ from snowflake.snowpark import Session
 from helpers.utils import fetch_with_retries
 
 
-@dag(start_date=datetime(2024,1,1), schedule='@daily', catchup=True, tags=['stock_market'])
+# Runs Tuesday - Saturday, grabbing the previous day, so grabbing weekdays Mon-Fri
+@dag(start_date=datetime(2024,1,1), schedule_interval="0 0 * * 2-6", catchup=True, tags=['stock_market'])
 def stock_market_close():
 
     @task.sensor(poke_interval=5, timeout=30, mode='poke')
@@ -25,7 +26,7 @@ def stock_market_close():
         url = f"{api.host}{endpoint}&apiKey={api_key}"
 
         response = requests.get(url=url)
-        condition = bool(response.status_code==200)
+        condition = bool(response.status_code in (200, 404))
         return condition
     
     @task(retries=5, retry_delay=30)
@@ -34,8 +35,15 @@ def stock_market_close():
         api_key = api.extra_dejson["stock_api_key"]
 
         session = Session.builder.configs(SNOWFLAKE_CREDS).create()
+        query = """
+        SELECT TICKER
+        FROM source.STOCK_TICKERS
+        WHERE TICKER IN (
+        'AMZN'
+        )
+        """
+        tickers_df = session.sql(query)
 
-        tickers_df = session.sql(f"SELECT TICKER FROM STOCK_TICKERS WHERE MARKET='stocks' LIMIT 10;")
         tickers = tickers = [row.TICKER for row in tickers_df.collect()]
 
         records = []

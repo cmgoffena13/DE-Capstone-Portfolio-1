@@ -5,10 +5,18 @@ CREATE OR REPLACE PROCEDURE staging.merge_stock_tickers()
 AS
 $$
 try {
-  // MERGE statement
+  // MERGE statement with deduplicated staging data
   var merge_sql = `
     MERGE INTO source.stock_tickers AS target
-    USING staging.stock_tickers AS source
+    USING (SELECT *
+      FROM (
+        SELECT 
+          *,
+          ROW_NUMBER() OVER (PARTITION BY Ticker ORDER BY Last_Updated_UTC DESC) AS row_num
+        FROM staging.stock_tickers
+      )
+      WHERE row_num = 1
+    ) AS source
     ON target.Ticker = source.Ticker
     WHEN MATCHED AND (target.Row_Hash != source.Row_Hash)
       THEN
@@ -39,7 +47,7 @@ try {
 
   // DELETE statement
   var delete_sql = `
-  DELETE FROM public.stock_tickers AS target
+  DELETE FROM source.stock_tickers AS target
   WHERE NOT EXISTS (
       SELECT 1
       FROM staging.stock_tickers AS source
