@@ -89,10 +89,14 @@ models:
       - name: is_purchase
         data_type: number
         description: "Whether the trade is a purchase"
+        tests:
+          - not_null
 
       - name: is_sale
         data_type: number
         description: "Whether the trade is a sale"
+        tests:
+          - not_null
 
       - name: record_upated_utc
         data_type: timestamp_tz
