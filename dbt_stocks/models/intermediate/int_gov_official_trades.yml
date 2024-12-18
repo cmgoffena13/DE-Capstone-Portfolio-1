@@ -1,0 +1,127 @@
+models:
+  - name: int_gov_official_trades
+    description: "Information about government officials' trades"
+    columns:
+      - name: trade_record_id
+        data_type: varchar
+        description: "Unique ID representing trade record in report"
+        tests:
+          - unique
+          - not_null
+
+      - name: notification_date
+        data_type: date
+        description: "Date government was notified of trades"
+        tests:
+          - not_null
+
+      - name: ownership
+        data_type: varchar
+        description: ""
+
+      - name: report_date
+        data_type: date
+        description: "Date report was filed to government regarding trade"
+        tests:
+          - not_null
+
+      - name: report_id
+        data_type: number
+        description: "Unique ID for report, can involve multiple trades"
+
+      - name: security_name
+        data_type: varchar
+        description: "Full name of the stock traded"
+        tests:
+          - not_null
+
+      - name: security_ticker
+        data_type: varchar
+        description: "Stock ticker of the stock traded"
+        tests:
+          - not_null
+
+      - name: security_type
+        data_type: varchar
+        description: "Type of stock traded. Ex. Stock"
+
+      - name: amount_value_bucket
+        data_type: varchar
+        description: "From government report. Dictates value range of the trade"
+        tests:
+          - not_null
+
+      - name: minimum_value
+        data_type: number
+        description: "Minimum value of the value range provided in report"
+        tests:
+          - not_null
+
+      - name: maximum_value
+        data_type: number
+        description: "Maximum value of the value range provided in report"
+        tests:
+          - not_null
+
+      - name: median_value
+        data_type: number
+        description: "Average value of the value range provided in report"
+        tests:
+          - not_null
+
+      - name: transaction_date
+        data_type: date
+        description: "Date the trade took place"
+        tests:
+          - not_null
+
+      - name: transaction_id
+        data_type: varchar
+        description: "Unique ID representing trade"
+        tests:
+          - unique
+          - not_null
+
+      - name: transaction_type
+        data_type: varchar
+        description: "Type of trade transaction. Ex. Purchase, Sale, Partial Sale"
+
+      - name: is_purchase
+        data_type: number
+        description: "Whether the trade is a purchase"
+
+      - name: is_sale
+        data_type: number
+        description: "Whether the trade is a sale"
+
+      - name: record_upated_utc
+        data_type: timestamp_tz
+        description: "Internal Column. Last updated by Polygon"
+        tests:
+          - not_null
+
+      - name: member_id
+        data_type: varchar
+        description: "Member ID of the government official that traded"
+        tests:
+          - not_null
+
+      - name: open
+        data_type: number
+        description: "Market open value of the stock for the transaction date"
+
+      - name: high
+        data_type: number
+        description: "Highest value of the stock for the transaction date"
+
+      - name: low
+        data_type: number
+        description: "Lowest value of the stock for the transaction date"
+
+      - name: close
+        data_type: number
+        description: "Market close value of the stock for the transaction date"
+
+      - name: stock_volume
+        data_type: number
+        description: "Total volume traded of the stock on the market for the transaction date"

@@ -1,0 +1,134 @@
+models:
+  - name: fct_government_official_trades
+    description: "Relevant information about government representatives' trades"
+    columns:
+      - name: member_id
+        data_type: varchar
+        description: "Unique Id of the government offical"
+        tests:
+          - not_null
+
+      - name: chamber
+        data_type: varchar
+        description: "Which chamber the government official is a part of. Ex. Senate, House of Representatives"
+        tests:
+          - not_null
+
+      - name: member_name
+        data_type: varchar
+        description: "Full name of government officials"
+        tests:
+          - not_null
+
+      - name: party
+        data_type: varchar
+        description: "Political party government official is in. Ex. Democrat, Republican"
+        tests:
+          - not_null
+
+      - name: state
+        data_type: varchar
+        description: "Full name of state government official represents"
+        tests:
+          - not_null
+
+      - name: district
+        data_type: varchar
+        description: "District number government official represents"
+
+      - name: committees
+        data_type: variant
+        description: "Current government committees government official is on"
+
+      - name: transaction_id
+        data_type: varchar
+        description: "Unique ID representing trade"
+        tests:
+          - unique
+          - not_null
+
+      - name: report_date
+        data_type: date
+        description: "Date report was filed to government regarding trade"
+        tests:
+          - not_null
+
+      - name: notification_date
+        data_type: date
+        description: "Date government was notified of trades"
+        tests:
+          - not_null
+
+      - name: transaction_date
+        data_type: date
+        description: "Date the trade took place"
+        tests:
+          - not_null
+
+      - name: transaction_type
+        data_type: varchar
+        description: "Type of trade transaction. Ex. Purchase, Sale, Partial Sale"
+        tests:
+          - not_null
+
+      - name: security_ticker
+        data_type: varchar
+        description: "Stock ticker of the stock traded"
+        tests:
+          - not_null
+
+      - name: security_name
+        data_type: varchar
+        description: "Full name of the stock traded"
+        tests:
+          - not_null
+
+      - name: transaction_miminum_value
+        data_type: number
+        description: "Minimum value of the value range provided in report"
+        tests:
+          - not_null
+
+      - name: transaction_median_value
+        data_type: number
+        description: "Average value of the value range provided in report"
+        tests:
+          - not_null
+
+      - name: transaction_maximum_value
+        data_type: number
+        description: "Maximum value of the value range provided in report"
+        tests:
+          - not_null
+
+      - name: stock_open
+        data_type: number
+        description: "Market open value of the stock for the transaction date"
+
+      - name: stock_high
+        data_type: number
+        description: "Highest value of the stock for the transaction date"
+
+      - name: stock_low
+        data_type: number
+        description: "Lowest value of the stock for the transaction date"
+
+      - name: stock_close
+        data_type: number
+        description: "Market close value of the stock for the transaction date"
+
+      - name: stock_volume
+        data_type: number
+        description: "Total volume traded of the stock on the market for the transaction date"
+
+      - name: is_purchase
+        data_type: number
+        description: "Whether the trade is a purchase"
+        tests:
+          - not_null
+
+      - name: is_sale
+        data_type: number
+        description: "Whether the trade is a sale"
+        tests:
+          - not_null

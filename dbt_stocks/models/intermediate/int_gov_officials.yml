@@ -1,0 +1,52 @@
+models:
+  - name: int_gov_officials
+    description: "Current government officials that have traded"
+    columns:
+      - name: member_id
+        data_type: varchar
+        description: "Unique Id of the government offical"
+        tests:
+          - unique
+          - not_null
+
+      - name: chamber
+        data_type: varchar
+        description: "Which chamber the government official is a part of. Ex. Senate, House of Representatives"
+        tests:
+          - not_null
+
+      - name: member_name
+        data_type: varchar
+        description: "Full name of government officials"
+        tests:
+          - not_null
+
+      - name: party
+        data_type: varchar
+        description: "Political party government official is in. Ex. Democrat, Republican"
+        tests:
+          - not_null
+
+      - name: state
+        data_type: varchar
+        description: "Full name of state government official represents"
+        tests:
+          - not_null
+
+      - name: district
+        data_type: varchar
+        description: "District number government official represents"
+
+      - name: committees
+        data_type: variant
+        description: "Current government committees government official is on"
+
+      - name: leadership_positions
+        data_type: variant
+        description: "Leadership positions held by government official"
+
+      - name: member_updated_utc
+        data_type: timestamp_tz
+        description: "Internal Column. Last time the member record has been updated by Polygon"
+        tests:
+          - not_null

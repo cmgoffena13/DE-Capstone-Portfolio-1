@@ -1,27 +1,44 @@
 WITH src_gov_official_trades AS (
     SELECT * FROM {{ ref('src_gov_official_trades') }}
+),
+src_market_close_by_day as (
+    SELECT * FROM {{ ref('src_market_close_by_day') }}
 )
 SELECT
-    trade_record_id,
-    notification_date,
-    ownership,
-    report_date,
-    report_id,
-    security_name,
-    security_ticker,
-    security_type,
-    amount AS amount_value_bucket,
-    TO_NUMBER(REPLACE(REPLACE(REGEXP_SUBSTR(amount, '\\$[0-9,]+', 1, 1), '$', ''), ',', '')) AS minimum_value,
-    TO_NUMBER(REPLACE(REPLACE(REGEXP_SUBSTR(amount, '\\$[0-9,]+', 1, 2), '$', ''), ',', '')) AS maximum_value,
-    transaction_date,
-    transaction_id,
+    g.trade_record_id,
+    g.notification_date,
+    g.ownership,
+    g.report_date,
+    g.report_id,
+    g.security_name,
+    g.security_ticker,
+    g.security_type,
+    g.amount AS amount_value_bucket,
+    TO_NUMBER(REPLACE(REPLACE(REGEXP_SUBSTR(g.amount, '\\$[0-9,]+', 1, 1), '$', ''), ',', '')) AS minimum_value,
+    TO_NUMBER(REPLACE(REPLACE(REGEXP_SUBSTR(g.amount, '\\$[0-9,]+', 1, 2), '$', ''), ',', '')) AS maximum_value,
+    ROUND((
+        TO_NUMBER(REPLACE(REPLACE(REGEXP_SUBSTR(g.amount, '\\$[0-9,]+', 1, 2), '$', ''), ',', '')) + 
+        TO_NUMBER(REPLACE(REPLACE(REGEXP_SUBSTR(g.amount, '\\$[0-9,]+', 1, 1), '$', ''), ',', ''))
+    ) / 2) AS median_value,
+    g.transaction_date,
+    g.transaction_id,
     CASE 
-        WHEN transaction_type = 'P' THEN 'Purchase'
-        WHEN transaction_type = 'S' THEN 'Sale'
-        WHEN transaction_type = 'S (Partial)' THEN 'Partial Sale'
+        WHEN g.transaction_type = 'P' THEN 'Purchase'
+        WHEN g.transaction_type = 'S' THEN 'Sale'
+        WHEN g.transaction_type = 'S (Partial)' THEN 'Partial Sale'
         ELSE 'UNKNOWN'
     END AS transaction_type,
-    TO_TIMESTAMP_TZ(record_updated) AS record_upated_utc,
-    member_id
-FROM src_gov_official_trades
-WHERE security_ticker IS NOT NULL
+    CASE WHEN g.transaction_type = 'P' THEN 1 ELSE 0 END AS Is_Purchase,
+    CASE WHEN g.transaction_type IN ('S', 'S (Partial)') THEN 1 ELSE 0 END AS Is_Sale,
+    TO_TIMESTAMP_TZ(g.record_updated) AS record_upated_utc,
+    g.member_id,
+    m.Open,
+    m.High,
+    m.Low,
+    m.Close,
+    m.STOCK_VOLUME
+FROM src_gov_official_trades AS g
+LEFT JOIN src_market_close_by_day AS m
+    ON m.date_recorded = g.transaction_date
+    AND m.ticker = g.security_ticker
+WHERE g.security_ticker IS NOT NULL

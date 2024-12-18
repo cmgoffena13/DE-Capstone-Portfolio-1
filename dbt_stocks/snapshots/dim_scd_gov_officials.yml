@@ -1,0 +1,55 @@
+snapshots:
+  - name: dim_scd_gov_officials
+    description: "Slowly Changing Dimension for government representatives of the House/Senate that have traded"
+    columns:
+      - name: member_id
+        data_type: varchar
+        description: "Unique Id of the government offical"
+
+      - name: chamber
+        data_type: varchar
+        description: "Which chamber the government official is a part of. Ex. Senate, House of Representatives"
+
+      - name: member_name
+        data_type: varchar
+        description: "Full name of government officials"
+
+      - name: party
+        data_type: varchar
+        description: "Political party government official is in. Ex. Democrat, Republican"
+
+      - name: state
+        data_type: varchar
+        description: "Full name of state government official represents"
+
+      - name: district
+        data_type: varchar
+        description: "District number government official represents"
+
+      - name: committees
+        data_type: variant
+        description: "Current government committees government official is on"
+
+      - name: leadership_positions
+        data_type: variant
+        description: "Leadership positions held by government official"
+
+      - name: member_updated_utc
+        data_type: timestamp_tz
+        description: "Internal Column. Last time the member record has been updated by Polygon"
+
+      - name: dbt_scd_id
+        data_type: varchar
+        description: "Internal Column. Unique identifier for each row"
+
+      - name: dbt_updated_at
+        data_type: timestamp_tz
+        description: "Internal Column. Updated by DBT when record was updated"
+
+      - name: dbt_valid_from
+        data_type: timestamp_tz
+        description: "Internal Column. When the record is valid from"
+
+      - name: dbt_valid_to
+        data_type: timestamp_tz
+        description: "Internal Column. When the record stopped being valid. NULL means record is still active"
