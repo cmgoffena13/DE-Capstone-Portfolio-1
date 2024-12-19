@@ -33,7 +33,7 @@ SELECT
     m.stock_volume,
     t.Is_Purchase,
     t.Is_Sale,
-    t.state_iso_format
+    g.state_iso_format
 FROM int_gov_official_trades AS t
 LEFT JOIN int_gov_officials AS g
     ON g.member_id = t.member_id
