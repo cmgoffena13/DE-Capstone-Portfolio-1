@@ -22,13 +22,17 @@ SELECT
     t.minimum_value AS transaction_miminum_value,
     t.median_value AS transaction_median_value,
     t.maximum_value AS transaction_maximum_value,
-    t.open AS stock_open,
-    t.high AS stock_high,
-    t.low AS stock_low,
-    t.close AS stock_close,
-    t.stock_volume,
+    m.stock_open,
+    m.stock_high,
+    m.stock_median,
+    m.stock_low,
+    m.stock_close,
+    m.stock_volume,
     t.Is_Purchase,
     t.Is_Sale
 FROM int_gov_official_trades AS t
 LEFT JOIN int_gov_officials AS g
     ON g.member_id = t.member_id
+LEFT JOIN int_market AS m
+    ON m.date_recorded = t.transaction_date
+    AND m.ticker = t.security_ticker

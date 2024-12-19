@@ -109,23 +109,3 @@ models:
         description: "Member ID of the government official that traded"
         tests:
           - not_null
-
-      - name: open
-        data_type: number
-        description: "Market open value of the stock for the transaction date"
-
-      - name: high
-        data_type: number
-        description: "Highest value of the stock for the transaction date"
-
-      - name: low
-        data_type: number
-        description: "Lowest value of the stock for the transaction date"
-
-      - name: close
-        data_type: number
-        description: "Market close value of the stock for the transaction date"
-
-      - name: stock_volume
-        data_type: number
-        description: "Total volume traded of the stock on the market for the transaction date"

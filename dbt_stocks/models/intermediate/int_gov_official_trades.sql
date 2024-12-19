@@ -31,14 +31,6 @@ SELECT
     CASE WHEN g.transaction_type = 'P' THEN 1 ELSE 0 END AS Is_Purchase,
     CASE WHEN g.transaction_type IN ('S', 'S (Partial)') THEN 1 ELSE 0 END AS Is_Sale,
     TO_TIMESTAMP_TZ(g.record_updated) AS record_upated_utc,
-    g.member_id,
-    m.Open,
-    m.High,
-    m.Low,
-    m.Close,
-    m.STOCK_VOLUME
+    g.member_id
 FROM src_gov_official_trades AS g
-LEFT JOIN src_market_close_by_day AS m
-    ON m.date_recorded = g.transaction_date
-    AND m.ticker = g.security_ticker
 WHERE g.security_ticker IS NOT NULL

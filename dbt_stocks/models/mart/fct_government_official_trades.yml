@@ -109,6 +109,10 @@ models:
         data_type: number
         description: "Highest value of the stock for the transaction date"
 
+      - name: stock_median
+        data_type: number
+        description: "Average value of the stock for the transaction date"
+
       - name: stock_low
         data_type: number
         description: "Lowest value of the stock for the transaction date"
