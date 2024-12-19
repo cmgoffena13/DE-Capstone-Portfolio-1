@@ -1,8 +1,5 @@
 WITH src_gov_official_trades AS (
     SELECT * FROM {{ ref('src_gov_official_trades') }}
-),
-src_market_close_by_day as (
-    SELECT * FROM {{ ref('src_market_close_by_day') }}
 )
 SELECT
     g.trade_record_id,
