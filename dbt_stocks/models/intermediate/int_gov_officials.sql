@@ -18,6 +18,7 @@ SELECT DISTINCT
         ELSE 'UNKNOWN'
     END AS party,
     IFNULL(s.state_name, 'UNKNOWN') AS state,
+    IFNULL(s.state_ISO_FORMAT, 'UNKNOWN') AS state_iso_format,
     g.district,
     g.committees,
     g.leadership_positions,

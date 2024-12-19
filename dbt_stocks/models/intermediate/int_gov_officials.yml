@@ -33,6 +33,12 @@ models:
         tests:
           - not_null
 
+      - name: state_iso_format
+        data_type: varchar
+        description: "ISO 3166-2 standard for country-region. Ex. US-NE"
+        tests:
+          - not_null
+
       - name: district
         data_type: varchar
         description: "District number government official represents"
