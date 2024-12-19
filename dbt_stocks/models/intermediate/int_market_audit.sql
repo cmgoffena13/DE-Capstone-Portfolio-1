@@ -1,16 +1,11 @@
 {{
     config(
-        tags=["int"],
-        materialized='incremental',
-        unique_key=['date_recorded', 'ticker'],
-        incremental_strategy='merge'
+        tags=["int_audit"],
+        materialized='table'
     )
 }}
 WITH src_market_close_by_day AS (
     SELECT * FROM {{ ref('src_market_close_by_day') }}
-),
-audit AS (
-    SELECT * FROM {{ ref('int_market_audit') }}
 )
 SELECT
     date_recorded,
@@ -22,6 +17,4 @@ SELECT
     stock_close,
     stock_volume
 FROM src_market_close_by_day
-{% if is_incremental() %}
-    WHERE date_recorded = '{{ var("run_date") }}'
-{% endif %}
+WHERE date_recorded = '{{ var("run_date") }}'

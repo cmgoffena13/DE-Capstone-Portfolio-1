@@ -1,3 +1,8 @@
+{{
+    config(
+        tags=["src"]
+    )
+}}
 WITH raw_market_close_by_day AS (
     SELECT * FROM {{ source('stock', 'market_close_by_day') }}
 )

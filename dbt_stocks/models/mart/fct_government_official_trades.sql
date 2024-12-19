@@ -1,3 +1,8 @@
+{{
+    config(
+        tags=["fct"]
+    )
+}}
 WITH int_gov_officials AS (
     SELECT * FROM {{ ref('int_gov_officials') }}
 ),

@@ -1,6 +1,6 @@
 models:
-  - name: int_gov_official_trades
-    description: "Information about government officials' trades"
+  - name: int_gov_official_trades_audit
+    description: "Information about government officials' trades - Audit Table"
     columns:
       - name: trade_record_id
         data_type: varchar
@@ -12,6 +12,8 @@ models:
       - name: notification_date
         data_type: date
         description: "Date government was notified of trades"
+        tests:
+          - not_null
 
       - name: ownership
         data_type: varchar
@@ -20,6 +22,8 @@ models:
       - name: report_date
         data_type: date
         description: "Date report was filed to government regarding trade"
+        tests:
+          - not_null
 
       - name: report_id
         data_type: number
@@ -28,10 +32,14 @@ models:
       - name: security_name
         data_type: varchar
         description: "Full name of the stock traded"
+        tests:
+          - not_null
 
       - name: security_ticker
         data_type: varchar
         description: "Stock ticker of the stock traded"
+        tests:
+          - not_null
 
       - name: security_type
         data_type: varchar
@@ -40,22 +48,32 @@ models:
       - name: amount_value_bucket
         data_type: varchar
         description: "From government report. Dictates value range of the trade"
+        tests:
+          - not_null
 
       - name: minimum_value
         data_type: number
         description: "Minimum value of the value range provided in report"
+        tests:
+          - not_null
 
       - name: maximum_value
         data_type: number
         description: "Maximum value of the value range provided in report"
+        tests:
+          - not_null
 
       - name: median_value
         data_type: number
         description: "Average value of the value range provided in report"
+        tests:
+          - not_null
 
       - name: transaction_date
         data_type: date
         description: "Date the trade took place"
+        tests:
+          - not_null
 
       - name: transaction_id
         data_type: varchar
@@ -71,15 +89,26 @@ models:
       - name: is_purchase
         data_type: number
         description: "Whether the trade is a purchase"
+        tests:
+          - not_null
 
       - name: is_sale
         data_type: number
         description: "Whether the trade is a sale"
+        tests:
+          - not_null
 
       - name: record_upated_utc
         data_type: timestamp_tz
         description: "Internal Column. Last updated by Polygon"
+        tests:
+          - not_null
 
       - name: member_id
         data_type: varchar
         description: "Member ID of the government official that traded"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('int_gov_officials_audit')
+              field: member_id

@@ -1,9 +1,14 @@
-/*
-Remove non-analytical columns, such as URLs and fix blanks space issues
-*/
+{{
+    config(
+        tags=["src"]
+    )
+}}
 WITH raw_gov_official_trades AS (
     SELECT * FROM {{ source('stock', 'gov_official_trades') }}
 )
+/*
+Remove non-analytical columns, such as URLs and fix blanks space issues
+*/
 SELECT
     --amendment_number,
     amount,

@@ -1,6 +1,6 @@
 models:
-  - name: int_gov_officials
-    description: "Current government officials that have traded"
+  - name: int_gov_officials_audit
+    description: "Current government officials that have traded  - Audit Table"
     columns:
       - name: member_id
         data_type: varchar
@@ -12,22 +12,32 @@ models:
       - name: chamber
         data_type: varchar
         description: "Which chamber the government official is a part of. Ex. Senate, House of Representatives"
+        tests:
+          - not_null
 
       - name: member_name
         data_type: varchar
         description: "Full name of government officials"
+        tests:
+          - not_null
 
       - name: party
         data_type: varchar
         description: "Political party government official is in. Ex. Democrat, Republican"
+        tests:
+          - not_null
 
       - name: state
         data_type: varchar
         description: "Full name of state government official represents"
+        tests:
+          - not_null
 
       - name: state_iso_format
         data_type: varchar
         description: "ISO 3166-2 standard for country-region. Ex. US-NE"
+        tests:
+          - not_null
 
       - name: district
         data_type: varchar
@@ -44,3 +54,5 @@ models:
       - name: member_updated_utc
         data_type: timestamp_tz
         description: "Internal Column. Last time the member record has been updated by Polygon"
+        tests:
+          - not_null

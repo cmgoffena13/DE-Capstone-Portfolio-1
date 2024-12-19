@@ -1,16 +1,11 @@
 {{
     config(
-        tags=["int"],
-        materialized='incremental',
-        unique_key='transaction_id',
-        incremental_strategy='merge'
+        tags=["int_audit"],
+        materialized='table'
     )
 }}
 WITH src_gov_official_trades AS (
     SELECT * FROM {{ ref('src_gov_official_trades') }}
-),
-audit AS (
-    SELECT * FROM {{ ref('int_gov_official_trades_audit') }}
 )
 SELECT
     g.trade_record_id,
@@ -42,6 +37,4 @@ SELECT
     g.member_id
 FROM src_gov_official_trades AS g
 WHERE g.security_ticker IS NOT NULL
-{% if is_incremental() %}
-    AND report_date = '{{ var("run_date") }}'
-{% endif %}
+    AND g.report_date = '{{ var("run_date") }}'

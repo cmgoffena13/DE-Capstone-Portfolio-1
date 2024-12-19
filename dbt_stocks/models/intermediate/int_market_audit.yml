@@ -1,0 +1,44 @@
+models:
+  - name: int_market_audit
+    description: "Daily stock data from the Polygon API - Audit Table"
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - date_recorded
+            - ticker
+    columns:
+      - name: date_recorded
+        data_type: date
+        description: "Date of market trades"
+        tests:
+          - not_null
+
+      - name: ticker
+        data_type: varchar
+        description: "Trades"
+        tests:
+          - not_null
+
+      - name: stock_open
+        data_type: number
+        description: "Market open value of the stock for the date recorded"
+
+      - name: stock_high
+        data_type: number
+        description: "Highest value of the stock for the date recorded"
+
+      - name: stock_median
+        data_type: number
+        description: "Average value of the stock for the date recorded"
+
+      - name: stock_low
+        data_type: number
+        description: "Lowest value of the stock for the date recorded"
+
+      - name: stock_close
+        data_type: number
+        description: "Market close value of the stock for the date recorded"
+
+      - name: stock_volume
+        data_type: number
+        description: "Total volume traded of the stock on the market for the date recorded"

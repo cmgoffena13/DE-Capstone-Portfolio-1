@@ -1,3 +1,8 @@
+{{
+    config(
+        tags=["src"]
+    )
+}}
 WITH raw_stock_tickers AS (
     SELECT * FROM {{ source('stock', 'tickers') }}
 )

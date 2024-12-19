@@ -1,9 +1,7 @@
 {{
     config(
-        tags=["int"],
-        materialized='incremental',
-        unique_key='member_id',
-        incremental_strategy='merge'
+        tags=["int_audit"],
+        materialized='table'
     )
 }}
 WITH gov_officials AS (
@@ -11,9 +9,6 @@ WITH gov_officials AS (
 ),
 states_CTE AS (
     SELECT * FROM {{ ref('states') }}
-),
-audit AS (
-    SELECT * FROM {{ ref('int_gov_officials_audit') }}
 )
 
 SELECT DISTINCT
@@ -38,6 +33,4 @@ SELECT DISTINCT
 FROM gov_officials AS g
 LEFT JOIN states_CTE AS s
     ON s.state_abbrev = g.state
-{% if is_incremental() %}
 WHERE report_date = '{{ var("run_date") }}'
-{% endif %}

@@ -36,3 +36,8 @@ models:
     # Have the source views ephemeral, don't need to clutter with views
     src:
       +materialized: ephemeral
+
+
+# set default runtime to yesterday's date unless specified otherwise
+vars:
+  run_date: "{{ (modules.datetime.date.today() - modules.datetime.timedelta(days=1)).isoformat() }}"
