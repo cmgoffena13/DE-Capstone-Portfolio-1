@@ -3,6 +3,9 @@ WITH int_gov_officials AS (
 ),
 int_gov_official_trades AS (
     SELECT * FROM {{ ref('int_gov_official_trades') }}
+),
+int_market AS (
+    SELECT * FROM {{ ref('int_market') }}
 )
 SELECT
     g.member_id,
