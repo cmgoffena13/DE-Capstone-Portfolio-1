@@ -6,6 +6,9 @@
     updated_at='Last_Updated_UTC',
     invalidate_hard_deletes=True
 ) }}
+WITH src_tickers AS (
+    SELECT * FROM {{ ref('src_tickers') }}
+)
 
 SELECT
     Active,
@@ -20,6 +23,6 @@ SELECT
     Ticker,
     --Row_Hash,
     watermark_timestamp
-FROM {{ ref('src_tickers') }}
+FROM src_tickers
 
 {% endsnapshot %}

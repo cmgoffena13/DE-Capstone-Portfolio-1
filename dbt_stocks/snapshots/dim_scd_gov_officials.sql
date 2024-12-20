@@ -6,6 +6,9 @@
     updated_at='member_updated_utc',
     invalidate_hard_deletes=True
 ) }}
+WITH int_gov_officials AS (
+    SELECT * FROM {{ ref('int_gov_officials') }}
+)
 
 SELECT
     member_id,
@@ -17,6 +20,6 @@ SELECT
     committees,
     leadership_positions,
     member_updated_utc
-FROM {{ ref('int_gov_officials') }} AS g
+FROM int_gov_officials
 
 {% endsnapshot %}
