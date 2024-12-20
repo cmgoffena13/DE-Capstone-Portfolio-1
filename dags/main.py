@@ -28,7 +28,7 @@ def main():
         external_dag_id='stock_government_trades',
         external_task_id='sf_copy_government_trades', # will try this, aliased for task dependency in dag
         allowed_states=['success'],
-        failed_states=['failed', 'skipped'],
+        failed_states=['failed', 'skipped', 'upstream_failed'],
         poke_interval=60, # every minute
         timeout=1200 # 20 minutes
     )
@@ -45,7 +45,7 @@ def main():
         external_dag_id='stock_market_close',
         external_task_id='sf_copy_market_close', # will try this, aliased for task dependency in dag
         allowed_states=['success'],
-        failed_states=['failed', 'skipped'],
+        failed_states=['failed', 'skipped', 'upstream_failed'],
         poke_interval=60, # every minute
         timeout=1200 # 20 minutes
     )
@@ -62,7 +62,7 @@ def main():
         external_dag_id='stock_market_tickers',
         external_task_id='sf_merge_stock_tickers', # will try this, aliased for task dependency in dag
         allowed_states=['success'],
-        failed_states=['failed', 'skipped'],
+        failed_states=['failed', 'skipped', 'upstream_failed'],
         poke_interval=60, # every minute
         timeout=1200 # 20 minutes
     )
