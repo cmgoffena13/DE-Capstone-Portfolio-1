@@ -9,7 +9,7 @@ PATH_TO_DBT_PROJECT = f'{airflow_home}/dbt_stocks'
 # PATH_TO_DBT_VARS = f'{airflow_home}/dbt_stocks/dbt.env'
 # ENTRYPOINT_CMD = f'source {PATH_TO_DBT_VENV} && source {PATH_TO_DBT_VARS}'
 
-@dag(start_date=datetime(2024,1,1), schedule='@daily', catchup=False, tags=['data_warehouse'])
+@dag(start_date=datetime(2024,1,1), schedule_interval=None, catchup=False, tags=['data_warehouse'])
 def dbt_run():
     
     dbt_deps = BashOperator(

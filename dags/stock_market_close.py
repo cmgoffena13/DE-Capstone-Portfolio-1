@@ -12,9 +12,9 @@ from helpers.config import SNOWFLAKE_CREDS, AWS_KEY, AWS_SECRET_KEY
 from snowflake.snowpark import Session
 from helpers.utils import fetch_with_retries
 
-
+# "0 0 * * 2-6"
 # Runs Tuesday - Saturday, grabbing the previous day, so grabbing weekdays Mon-Fri
-@dag(start_date=datetime(2024,1,1), schedule_interval="0 0 * * 2-6", catchup=True, tags=['integration'])
+@dag(start_date=datetime(2024,1,1), schedule_interval=None, catchup=False, tags=['integration'])
 def stock_market_close():
 
     @task.sensor(poke_interval=5, timeout=30, mode='poke')
