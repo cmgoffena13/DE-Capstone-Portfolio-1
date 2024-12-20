@@ -14,7 +14,7 @@ from helpers.utils import fetch_with_retries
 
 
 # Runs Tuesday - Saturday, grabbing the previous day, so grabbing weekdays Mon-Fri
-@dag(start_date=datetime(2024,1,1), schedule_interval="0 0 * * 2-6", catchup=True, tags=['stock_market'])
+@dag(start_date=datetime(2024,1,1), schedule_interval="0 0 * * 2-6", catchup=True, tags=['integration'])
 def stock_market_close():
 
     @task.sensor(poke_interval=5, timeout=30, mode='poke')

@@ -13,7 +13,7 @@ from helpers.config import SNOWFLAKE_CREDS, AWS_KEY, AWS_SECRET_KEY, SF_DATABASE
 from snowflake.snowpark import Session
 
 
-@dag(start_date=datetime(2024,1,1), schedule='@monthly', catchup=False, tags=['stock_market'])
+@dag(start_date=datetime(2024,1,1), schedule='@monthly', catchup=False, tags=['integration'])
 def stock_market_tickers():
     
     @task.sensor(poke_interval=5, timeout=30, mode='poke')
