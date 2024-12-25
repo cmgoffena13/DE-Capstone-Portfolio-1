@@ -154,7 +154,7 @@ https://www.benzinga.com/api/v1/gov/usa/congress/trades?pagesize=1&date={date}&t
   ]
 }
 ```
-<sup>Initial thoughts: this has multiple updated epoch timestamps. Broken down into the filer_info and the actual trade info. There are multiple dates that need to be understood on the transaction. Report Date is almost a month after the actual transaction date, so there is lag. Updated epoch is a godsend.</sup>
+<sup>Initial thoughts: this has multiple updated epoch timestamps. Broken down into the filer_info and the actual trade info. Looks like we are only given a bucket range of the amount in the trade. There are multiple dates that need to be understood on the transaction. Report Date is almost a month after the actual transaction date, so there is lag. Updated epoch is a godsend.</sup>
 
 
 ## Integration Layer
@@ -168,7 +168,7 @@ A way to easily store the API results in their raw form. This allowed me to easi
 Snowflake allows integration with AWS using an IAM role so credentials are not stored in a Snowflake STAGE anywhere. For more info on creating a Snowflake INTEGRATION with AWS, I would check out this walkthrough article: https://interworks.com/blog/2023/02/14/configuring-storage-integrations-between-snowflake-and-aws-s3/
 
 ### Snowflake STAGE & COPY INTO
-Snowflake allows the use of STAGEs, external sources, which greatly simplified the use of COPY INTO. STAGEs allow easy integration as Snowflake even keeps track of what files have been loaded. It was easy to supply it a wildcard and let it go to work, regardless of how far it is behind. I just setup the STAGEs and wrote COPY INTO quries that parse the JSON columns into a table format. Example below:
+Snowflake allows the use of STAGEs, external sources, which greatly simplified the use of COPY INTO. STAGEs allow easy integration as Snowflake even keeps track of what files have been loaded. It was easy to supply it a wildcard and let it go to work, regardless of how far it is behind. I just setup the STAGEs and wrote COPY INTO queries that parse the JSON columns into a table format. Example below:
 ```sql
 COPY INTO STOCK_DB.source.market_close_by_day 
 FROM (
@@ -204,4 +204,4 @@ dbt run -s tag:audit
 ## Airflow Orchestration
 One of the challenges I ran into with this project was the orchestration of all the pipelines. If an integration pipeline with one of the APIs failed, I did not want DBT to run and add no data inside Snowflake. I ended up using the TriggerDagRunOperator and the ExternalTaskSensor within the dag `main.py`. This allowed me to trigger the dags in an appropriate order and use a sensor to ensure integrations succeeded before triggering DBT! 
 
-There is more than one way to do this. I could also have setup my DBT run to have sensors on the data in the Snowflake tables. This is probably a better approach since it decouples and looks at data dependencies instead of task dependencies.
+There is more than one way to do this. I could also have setup my DBT run to have custom sensors on the data in the Snowflake tables. This is probably a better approach since it decouples and looks at data dependencies instead of task dependencies.
