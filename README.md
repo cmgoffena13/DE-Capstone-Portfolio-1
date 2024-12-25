@@ -30,6 +30,7 @@ This project combines stock information with government official's trading recor
     1. [AWS S3 Bucket](#AWS-S3-Bucket)
     2. [Snowflake INTEGRATION](#Snowflake-INTEGRATION)
     1. [Snowflake STAGE & COPY INTO](#Snowflake-STAGE-&-COPY-INTO)
+    4. [Tickers Integration](#Tickers-Integration)
 4. [DBT Write-Audit-Publish Pattern](#DBT-Write-Audit-Publish-Pattern)
 5. [DBT Tags](#DBT-Tags)
 6. [Airflow Orchestration](#Airflow-Orchestration)
@@ -47,7 +48,7 @@ From a skillset perspective I am proficient in SQL and Python, which led me to c
 Taking a look at the Polygon API JSON results that were available. It is always important to look at the data you'll be working with before you start!
 
 ### Tickers API EndPoint
-https://api.polygon.io/v3/reference/tickers?active=true&limit=100&apiKey=...
+https://api.polygon.io/v3/reference/tickers?active=true&limit=1&apiKey=...
 
 ### Tickers API EndPoint - Results
 ```json
@@ -191,12 +192,17 @@ ON_ERROR = 'SKIP_FILE_10%';
 ```
 <sup>The ON_ERROR argument tells the process to skip any files that errored for more than 10% of the rows.</sup>
 
+### Tickers Integration
+The tickers integration is unique as I am grabbing the full list of tickers every time. The initial designs posed a problem. Snowpark only allows overwrite or append. So I could overwrite the table every run or truncate the table and then append records into it. Either way, if an error happened, it could leave the tickers table empty or missing data. I didn't want that to happen as the Market Open/Close API call uses the table to loop through every ticker and call the API. I needed to make sure that if the integration failed, the table would still have data from the last run.  
+
+I decided on creating a staging table for the initial data and then having a stored procedure that would merge the data into the tickers table, making it an exact copy. This allowed any updates to occur as needed. There is still the possibility of no data being inserted and the merge then matches the staging, deleting all the records. It's unlikely to occur though since the API needs to be available (a sensor checks availability) for the tasks to trigger. My project demanded only so much bullet-proofing.
+
 ## DBT Write-Audit-Publish Pattern
 I had a lot of fun trying to figure out how to efficiently audit the data. I treated it as a challenge of "what if these pipelines became very large". DBT is great to easily get started and just fire away queries at your engine, but it takes work to figure out how to use it at scale. I wrote a detailed article on how I set up a Write-Audit-Publish pattern in DBT that I used in this project. Link: https://medium.com/@cortlandgoffena/dbt-write-audit-publish-9b5fc6bbd73d
 
 
 ## DBT Tags
-One of the challenges I faced in this project was how to have DBT step through the Write-Audit-Publish pattern easily. I found out how to do it step by step for one model, but then triggering each step of the pattern for all the models was challenging. I landed on adding tags to each model so that I could easily trigger the audit models (tagged as "audit"), then test them, and then trigger the incremental models. Below is an example of how to trigger DBT models that are tagged:
+One of the challenges I faced in this project was how to have DBT step through the Write-Audit-Publish pattern easily. I found out how to do it step by step for one model, but then triggering each step of the pattern for all the models was challenging. I landed on adding tags to each model so that I could easily trigger the audit models (tagged as "audit"), then test them, and then trigger the incremental models. You'll notice my data model diagram at the beginning of the documentation is broken out into stages. These are easily triggered through DBT with tagging. Below is an example of how to trigger DBT models that are tagged:
 ```bash
 dbt run -s tag:audit
 ```
