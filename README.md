@@ -32,13 +32,14 @@ This project combines stock information with government official's trading recor
 4. [DBT Write-Audit-Publish Pattern](#DBT-Write-Audit-Publish-Pattern)
 5. [DBT Tags](#DBT-Tags)
 6. [Airflow Orchestration](#Airflow-Orchestration)
+7. [Setup](#Setup)
 
 ## Technology Choices
 From a skillset perspective I am proficient in SQL and Python, which led me to choose these tools:
  - **Airflow**: dependable and mature orchestration tool to handle dependencies
  - **Docker**: used to easily spin up Astronomer/Airflow environment and great environment reproducibility
  - **AWS**: most mature cloud provider and easy to integrate with using the Python AWS SDK
- - **Snowflake**: easy integration due to SnowPark and Snowflake's COPY INTO command made it super easy to move data from S3 buckets into the warehouse. All Snowflake queries can be found in `include/snowflake`
+ - **Snowflake**: easy integration due to SnowPark and Snowflake's COPY INTO command. Makes it super easy to move data from S3 buckets into the warehouse. All Snowflake queries can be found in `include/snowflake`
  - **DBT**: popular SQL abstraction tool that allowed me to easily document the SQL models, write tests, and handle data lineage 
  - **Looker**: I shopped around for presentation tools, but Looker's free tier actually allowed me to publicly share a dashboard so I was sold
 
@@ -240,3 +241,10 @@ Cons:
 One of the challenges I ran into with this project was the orchestration of all the pipelines. If an integration pipeline with one of the APIs failed, I did not want DBT to run and add no data inside Snowflake. I ended up using the TriggerDagRunOperator and the ExternalTaskSensor within the dag `main.py`. This allowed me to trigger the dags in an appropriate order and use a sensor to ensure integrations succeeded before triggering DBT! 
 
 There is more than one way to do this. I could also have setup my DBT run to have custom sensors on the data in the Snowflake tables. This is probably a better approach since it decouples and looks at data dependencies instead of task dependencies.
+
+## Setup
+I you want to spin up the project itself you'll need a couple environment variables. The names are supplied in the `example.env` file.  
+
+You'll also need to create two connections in Airflow for the APIs and add the API Keys in there as config.  
+
+Snowflake requires numerous objects to be created. Check the `include/snowflake` folder for the scripts.
