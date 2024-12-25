@@ -13,8 +13,8 @@ This project combines stock information with government official's trading recor
 
 ## Dashboard
 
-## Data Model
-![Stock Trades Pipeline](Pipeline_Overview.png "Pipeline Overview")
+## Data Warehouse Overview
+![Data Warehouse Overview](Data_Warehouse_Overview.png "Data Warehouse Overview")
 
 ## Table of Contents
 1. [Technology Choices](#Technology-Choices)
@@ -23,6 +23,7 @@ This project combines stock information with government official's trading recor
     3. [Market Open/Close API Endpoint](#Market-Open/Close-API-Endpoint)
 3. [Initial Data Investigations - Benzinga API](#Initial-Data-Investigations---Benzinga-API)
     1. [Government Trades API Endpoint](#Government-Trades-API-Endpoint)
+4. [API Rate Limiting](#API-Rate-Limiting)
 3. [Integration Layer](#Integration-Layer)
     1. [AWS S3 Bucket](#AWS-S3-Bucket)
     2. [Snowflake INTEGRATION](#Snowflake-INTEGRATION)
@@ -153,9 +154,32 @@ URL: https://www.benzinga.com/api/v1/gov/usa/congress/trades?pagesize=1&date={da
 ```
 <sup>Initial thoughts: this has multiple updated epoch timestamps. Broken down into the filer_info and the actual trade info. Looks like we are only given a bucket range of the amount in the trade. There are multiple dates that need to be understood on the transaction. Report Date is almost a month after the actual transaction date, so there is lag. Updated epoch is a godsend.</sup>
 
+## API Rate Limiting
+The Polygon API offers a free tier of 5 calls per minute while the Benzinga offers an all out free trial. The Polygon API posed an interesting problem during testing as I needed to rate-limit the API. I ended up with the below code to ensure I respected their endpoint:
+```python
+def fetch_with_retries(url, max_retries=10, initial_delay=12):
+    retries = 0
+    while retries < max_retries:
+        response = requests.get(url)
+        # exceeded api call limit; 429 Too Many Requests
+        if response.status_code == 429:
+            # Retry with exponential backoff
+            # Add jitter for API calls to be randomly staggered
+            jittered_delay = random.uniform(initial_delay-1, initial_delay)
+            expo = float(2 ** retries)
+            wait_time = float(response.headers.get("Retry-After", jittered_delay * expo))
+            print(f"Rate Limited: Retrying in {wait_time:.2f} seconds... Function Retries Left: {max_retries - retries}")
+            time.sleep(wait_time)
+            retries += 1
+        elif response.status_code == 200:
+            return response.json()
+        else:
+            response.raise_for_status() # Raise an exception for other error codes
+    raise Exception("Exceeded maximum retries for the API request")
+```
 
 ## Integration Layer
-What is often overlooked in a data project is creating the integration layer that allows the building of pipelines and models off of. The integration layer happened in two stages: 
+What is often overlooked in a data project is creating the integration layer to create and maintain an Operational Data Store (ODS). The ODS allows for the building of pipelines and models off within the Data Warehouse. The integration layer happened in two stages: 
 
 1. Pinging the APIs and storing the JSON in S3 Buckets
 2. Using Snowflake's COPY INTO command to move the JSON files into tables
