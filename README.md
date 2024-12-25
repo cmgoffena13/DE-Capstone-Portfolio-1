@@ -20,12 +20,9 @@ This project combines stock information with government official's trading recor
 1. [Technology Choices](#Technology-Choices)
 2. [Initial Data Investigations - Polygon API](#Initial-Data-Investigations---Polygon-API)
     1. [Tickers API EndPoint](#Tickers-API-EndPoint)
-    2. [Tickers API EndPoint - Results](#Tickers-API-EndPoint---Results)
     3. [Market Open/Close API Endpoint](#Market-Open/Close-API-Endpoint)
-    4. [Market Open/Close API Endpoint - Results](#Market-Open/Close-API-Endpoint---Results)
 3. [Initial Data Investigations - Benzinga API](#Initial-Data-Investigations---Benzinga-API)
     1. [Government Trades API Endpoint](#Government-Trades-API-Endpoint)
-    2. [Government Trades API Endpoint - Results](#Government-Trades-API-Endpoint---Results)
 3. [Integration Layer](#Integration-Layer)
     1. [AWS S3 Bucket](#AWS-S3-Bucket)
     2. [Snowflake INTEGRATION](#Snowflake-INTEGRATION)
@@ -48,9 +45,8 @@ From a skillset perspective I am proficient in SQL and Python, which led me to c
 Taking a look at the Polygon API JSON results that were available. It is always important to look at the data you'll be working with before you start!
 
 ### Tickers API EndPoint
-https://api.polygon.io/v3/reference/tickers?active=true&limit=1&apiKey=...
-
-### Tickers API EndPoint - Results
+URL: https://api.polygon.io/v3/reference/tickers?active=true&limit=1&apiKey=...  
+**Results**
 ```json
 {
   "count": 1,
@@ -78,9 +74,9 @@ https://api.polygon.io/v3/reference/tickers?active=true&limit=1&apiKey=...
 <sup>Initial thoughts: only need the results JSON. An active field shows that this is time-variant (A ticker could be inactive at some point). We have a last updated UTC timestamp that we can utilize as a watermark if needed. Main data point is "ticker," but there are types we need to take into account as well. Ex. Crypto, Stocks, Indexes</sup>
 
 ### Market Open/Close API Endpoint
-https://api.polygon.io/v1/open-close/{ticker}/{date}?adjusted=true&apiKey=...
+URL: https://api.polygon.io/v1/open-close/{ticker}/{date}?adjusted=true&apiKey=... 
 
-### Market Open/Close API Endpoint - Results
+**Results**
 ```json
 {
   "status": "OK",
@@ -98,12 +94,12 @@ https://api.polygon.io/v1/open-close/{ticker}/{date}?adjusted=true&apiKey=...
 <sup>Initial thoughts: pretty straightforward, not that familiar with stocks in general so afterHours and preMarket are a little mysterious. Noticed the status value that we can check. Also noticing the decimal values can have more than 2 decimal places.</sup>
 
 ## Initial Data Investigations - Benzinga API
-Taking a look at the Benzinga API JSON results that were available. It is always important to look at the data you'll be working with before you start!
 
 ### Government Trades API Endpoint
-https://www.benzinga.com/api/v1/gov/usa/congress/trades?pagesize=1&date={date}&token=...
+URL: https://www.benzinga.com/api/v1/gov/usa/congress/trades?pagesize=1&date={date}&token=...  
 
-### Government Trades API Endpoint - Results
+**Results**
+
 ```json
 {
   "data": [
@@ -164,12 +160,12 @@ What is often overlooked in a data project is creating the integration layer tha
 1. Pinging the APIs and storing the JSON in S3 Buckets
 2. Using Snowflake's COPY INTO command to move the JSON files into tables
 ### AWS S3 Bucket
-A way to easily store the API results in their raw form. This allowed me to easily re-trigger integrations and test the snowflake side of things. I created two S3 buckets, one for each API, and had each S3 bucket delete any data older than 7 days to save on costs. If this was a production pipeline, I would have the data archived after a certain time frame.
+S3 Buckets were a way to easily store the API results in their raw form (mostly raw, I compressed them using gzip for lower cost). This allowed me to easily re-trigger integrations and test the snowflake side of things. I created two S3 buckets, one for each API, and had each S3 bucket delete any data older than 7 days to save on costs. If this was a production pipeline, I would have the data archived after a certain time frame.
 ### Snowflake INTEGRATION
 Snowflake allows integration with AWS using an IAM role so credentials are not stored in a Snowflake STAGE anywhere. For more info on creating a Snowflake INTEGRATION with AWS, I would check out this walkthrough article: https://interworks.com/blog/2023/02/14/configuring-storage-integrations-between-snowflake-and-aws-s3/
 
 ### Snowflake STAGE & COPY INTO
-Snowflake allows the use of STAGEs, external sources, which greatly simplified the use of COPY INTO. STAGEs allow easy integration as Snowflake even keeps track of what files have been loaded. It was easy to supply it a wildcard and let it go to work, regardless of how far it is behind. I just setup the STAGEs and wrote COPY INTO queries that parse the JSON columns into a table format. Example below:
+Snowflake allows the use of STAGEs, external sources, which greatly simplified the use of COPY INTO. STAGEs allow easy integration as Snowflake even keeps track of what files have been loaded. STAGEs are unique to Snowflake and are marked by the @ symbol. It was easy to supply the COPY command a wildcard and let it go to work, regardless of how many files weren't synced. I just setup the STAGEs and wrote COPY INTO queries that parse the JSON columns into a table format. Example below:
 ```sql
 COPY INTO STOCK_DB.source.market_close_by_day 
 FROM (
@@ -206,6 +202,13 @@ One of the challenges I faced in this project was how to have DBT step through t
 ```bash
 dbt run -s tag:audit
 ```
+Pros:
+- Easy organization of models into stages
+- Less complexity while still maintaining Write-Audit-Publish pattern 
+
+Cons:
+- If a model isn't tagged, it isn't ran in the pipeline
+- Lose out on some optimization as each model in the dbt tagged stage needs to complete before the next one can trigger
 
 ## Airflow Orchestration
 One of the challenges I ran into with this project was the orchestration of all the pipelines. If an integration pipeline with one of the APIs failed, I did not want DBT to run and add no data inside Snowflake. I ended up using the TriggerDagRunOperator and the ExternalTaskSensor within the dag `main.py`. This allowed me to trigger the dags in an appropriate order and use a sensor to ensure integrations succeeded before triggering DBT! 
