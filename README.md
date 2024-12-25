@@ -185,7 +185,23 @@ What is often overlooked in a data project is creating the integration layer to 
 1. Pinging the APIs and storing the JSON in S3 Buckets
 2. Using Snowflake's COPY INTO command to move the JSON files into tables
 ### AWS S3 Bucket
-S3 Buckets were a way to easily store the API results in their raw form (mostly raw, I compressed them using gzip for lower cost). This allowed me to easily re-trigger integrations and test the snowflake side of things. I created two S3 buckets, one for each API, and had each S3 bucket delete any data older than 7 days to save on costs. If this was a production pipeline, I would have the data archived after a certain time frame.
+S3 Buckets were a way to easily store the API results in their raw form. This allowed me to easily re-trigger integrations and test the snowflake side of things. I created two S3 buckets, one for each API, and had each S3 bucket delete any data older than 7 days to save on costs. If this was a production pipeline, I would have the data archived after a certain time frame. I also compressed the files before storing them to lower storage costs (hey, its a personal  project, I can be frugal). Example below:
+```python
+try:
+    # Create binary buffer to story in compressed bytes in memory   
+    buffer = io.BytesIO()
+    with gzip.GzipFile(fileobj=buffer, mode='w') as file:
+        file.write(json_data.encode('utf-8'))
+
+    # Reset buffer so it can be read from beginning for writing to s3
+    buffer.seek(0)
+
+    # Specify compression type
+    s3.put_object(Body=buffer, Bucket=bucket_name, Key=key, ContentEncoding='gzip')
+except botocore.exceptions.ClientError as error:
+    print(f"Error uploading key: {key}; error: {error}")
+```
+
 ### Snowflake INTEGRATION
 Snowflake allows integration with AWS using an IAM role so credentials are not stored in a Snowflake STAGE anywhere. For more info on creating a Snowflake INTEGRATION with AWS, I would check out this walkthrough article: https://interworks.com/blog/2023/02/14/configuring-storage-integrations-between-snowflake-and-aws-s3/
 
