@@ -44,11 +44,9 @@ def stock_market_close():
 
         session = Session.builder.configs(SNOWFLAKE_CREDS).create()
         query = """
-        SELECT TICKER
+        SELECT DISTINCT 
+        TICKER
         FROM source.STOCK_TICKERS
-        WHERE TICKER IN (
-        'AMZN'
-        )
         """
         tickers_df = session.sql(query)
 
