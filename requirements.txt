@@ -4,3 +4,6 @@ dbt-snowflake==1.7.1
 flake8==7.1.1
 black==24.10.0
 isort==5.13.2
+sqlfluff==3.3.0
+sqlfluff-templater-dbt==3.3.0
+pre_commit==4.0.1

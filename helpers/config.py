@@ -5,6 +5,8 @@ from dotenv import load_dotenv
 base_dir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 load_dotenv(os.path.join(base_dir, ".env"))
 
+private_key_path = os.path.join(base_dir, "private_key.pem")
+
 AWS_KEY = os.environ.get("AWS_KEY")
 AWS_SECRET_KEY = os.environ.get("AWS_SECRET_KEY")
 
@@ -22,4 +24,5 @@ SNOWFLAKE_CREDS = {
     "warehouse": SF_WAREHOUSE,
     "database": SF_DATABASE,
     "schema": SF_SCHEMA,
+    "private_key_file": private_key_path
 }

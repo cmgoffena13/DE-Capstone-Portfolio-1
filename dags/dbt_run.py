@@ -54,7 +54,9 @@ def dbt_run():
     )
 
     dbt_run_snapshot = BashOperator(
-        task_id="dbt_run_snapshot", bash_command="dbt snapshot", cwd=PATH_TO_DBT_PROJECT
+        task_id="dbt_run_snapshot",
+        bash_command="dbt snapshot -s dim_scd_gov_officials",
+        cwd=PATH_TO_DBT_PROJECT
     )
 
     dbt_run_fct = BashOperator(

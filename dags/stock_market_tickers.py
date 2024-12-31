@@ -25,7 +25,7 @@ def stock_market_tickers():
 
     @task.sensor(poke_interval=5, timeout=30, mode="poke")
     def is_ticker_api_available(ds: str):
-        endpoint = "/v3/reference/tickers?active=true&limit=1"
+        endpoint = "/v3/reference/tickers?market=stocks&active=true&limit=1"
         api = BaseHook.get_connection("stock_api")
         api_key = api.extra_dejson["stock_api_key"]
         url = f"{api.host}{endpoint}&date={ds}&apiKey={api_key}"
@@ -39,7 +39,7 @@ def stock_market_tickers():
         api = BaseHook.get_connection("stock_api")
         api_key = api.extra_dejson["stock_api_key"]
         endpoint = (
-            f"/v3/reference/tickers?active=true&limit=1000&date={ds}&apiKey={api_key}"
+            f"/v3/reference/tickers?market=stocks&active=true&limit=1000&date={ds}&apiKey={api_key}"
         )
 
         url = f"{api.host}{endpoint}"

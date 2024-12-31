@@ -43,23 +43,35 @@ def stock_market_close():
         api_key = api.extra_dejson["stock_api_key"]
 
         session = Session.builder.configs(SNOWFLAKE_CREDS).create()
-        query = """
-        SELECT DISTINCT 
-        TICKER
-        FROM source.STOCK_TICKERS
+
+        date = ds
+        query = f"""
+        SELECT DISTINCT
+        SECURITY_TICKER, TRANSACTION_DATE
+        FROM SOURCE.GOVERNMENT_TRADES
+        WHERE SECURITY_TICKER != ''
+            AND REPORT_DATE = '{date}'
         """
         tickers_df = session.sql(query)
 
-        tickers = tickers = [row.TICKER for row in tickers_df.collect()]
+        data = [(row.SECURITY_TICKER, row.TRANSACTION_DATE) for row in tickers_df.collect()]
+        # Add in Standard & Poor's 500 for market comparison
+        # data.append(('I:SPX', ds)) - need more money, bleh
 
         records = []
-        for ticker in tickers:
-            url = f"{api.host}/v1/open-close/{ticker}/{ds}/?adjusted=true&apiKey={api_key}"
+        for ticker, transaction_date in data:
+            url = (
+                f"{api.host}/v1/open-close/{ticker}/{transaction_date}"
+                f"/?adjusted=true&apiKey={api_key}"
+            )
             try:
                 response = fetch_with_retries(url)
             except requests.exceptions.HTTPError as error:
                 if error.response.status_code == 404:
-                    print(f"Data not found for ticker: {ticker} on {ds}. Continuing...")
+                    print(
+                        f"Data not found for ticker: {ticker} on {transaction_date}."
+                        "Continuing..."
+                        )
                     continue
                 else:
                     raise (error)
