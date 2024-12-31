@@ -32,6 +32,7 @@ This project combines stock information with government official's trading recor
 4. [DBT Write-Audit-Publish Pattern](#DBT-Write-Audit-Publish-Pattern)
 5. [DBT Tags](#DBT-Tags)
 6. [Airflow Orchestration](#Airflow-Orchestration)
+7. [Efficiencies](#Efficiencies)
 7. [Setup](#Setup)
 
 ## Technology Choices
@@ -44,7 +45,7 @@ From a skillset perspective I am proficient in SQL and Python, which led me to c
  - **Looker**: I shopped around for presentation tools, but Looker's free tier actually allowed me to publicly share a dashboard so I was sold
 
 ## Initial Data Investigations - Polygon API
-Taking a look at the Polygon API JSON results that were available. It is always important to look at the data you'll be working with before you start!
+Taking a look at the Polygon API JSON results that were available. Polygon turned out to be really great, with affordable subscriptions for their endpoints. It is always important to look at the data you'll be working with before you start!
 
 ### Tickers API EndPoint
 URL: https://api.polygon.io/v3/reference/tickers?active=true&limit=1&apiKey=...  
@@ -96,6 +97,7 @@ URL: https://api.polygon.io/v1/open-close/{ticker}/{date}?adjusted=true&apiKey=.
 <sup>Initial thoughts: pretty straightforward, not that familiar with stocks in general so afterHours and preMarket are a little mysterious. Noticed the status value that we can check. Also noticing the decimal values can have more than 2 decimal places.</sup>
 
 ## Initial Data Investigations - Benzinga API
+Benzinga gave the most detailed information about government official trading. They had a 2 week trial showcasing the last month's worth of data. Their pricing for a plan ended up being atrocious though at $300 a month for just the government trades endpoint. They also hid their pricing behind "Contact Us". No thank you. So I grabbed a month's worth to showcase. Not worth getting a different endpoint after the investment in code. Maybe I'll switch later but other endpoints aren't as fleshed out. 
 
 ### Government Trades API Endpoint
 URL: https://www.benzinga.com/api/v1/gov/usa/congress/trades?pagesize=1&date={date}&token=...  
@@ -257,6 +259,9 @@ Cons:
 One of the challenges I ran into with this project was the orchestration of all the pipelines. If an integration pipeline with one of the APIs failed, I did not want DBT to run and add no data inside Snowflake. I ended up using the TriggerDagRunOperator within the dag `main.py`. This allowed me to trigger the dags in an appropriate order and ensure integrations succeeded before triggering DBT! 
 
 There is more than one way to do this. I could also have setup my DBT run to have custom sensors on the data in the Snowflake tables or used Datasets. This is probably a better approach since it decouples and looks at data dependencies instead of task dependencies.
+
+## Efficiencies
+Initial design pulled the closing stats for every ticker through the Polygon API. Given my analysis was around government officials' trades, I ended up modifying the logic to only grab the tickers that had been traded. I also modified my pipeline to only run everything if government trade data was available. This made it small, concise, and efficient. If it wasn't a personal project, I probably would store information about all tickers. It could come in handy later.
 
 ## Setup
 I you want to spin up the project itself you'll need a couple environment variables. The names are supplied in the `example.env` file. You'll also want to create a DBT profiles yml. An example file is included: `example.profiles.yml`.
