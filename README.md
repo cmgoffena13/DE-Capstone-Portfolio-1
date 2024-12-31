@@ -254,9 +254,9 @@ Cons:
 - Lose out on some optimization as each model in the dbt tagged layer needs to complete before the next one can trigger
 
 ## Airflow Orchestration
-One of the challenges I ran into with this project was the orchestration of all the pipelines. If an integration pipeline with one of the APIs failed, I did not want DBT to run and add no data inside Snowflake. I ended up using the TriggerDagRunOperator and the ExternalTaskSensor within the dag `main.py`. This allowed me to trigger the dags in an appropriate order and use a sensor to ensure integrations succeeded before triggering DBT! 
+One of the challenges I ran into with this project was the orchestration of all the pipelines. If an integration pipeline with one of the APIs failed, I did not want DBT to run and add no data inside Snowflake. I ended up using the TriggerDagRunOperator within the dag `main.py`. This allowed me to trigger the dags in an appropriate order and ensure integrations succeeded before triggering DBT! 
 
-There is more than one way to do this. I could also have setup my DBT run to have custom sensors on the data in the Snowflake tables. This is probably a better approach since it decouples and looks at data dependencies instead of task dependencies.
+There is more than one way to do this. I could also have setup my DBT run to have custom sensors on the data in the Snowflake tables or used Datasets. This is probably a better approach since it decouples and looks at data dependencies instead of task dependencies.
 
 ## Setup
 I you want to spin up the project itself you'll need a couple environment variables. The names are supplied in the `example.env` file. You'll also want to create a DBT profiles yml. An example file is included: `example.profiles.yml`.
@@ -264,4 +264,3 @@ I you want to spin up the project itself you'll need a couple environment variab
 You'll also need to create two connections in Airflow for the APIs and add the API Keys in there as config.  
 
 Snowflake requires numerous objects to be created. Check the `include/snowflake` folder for the scripts.
-

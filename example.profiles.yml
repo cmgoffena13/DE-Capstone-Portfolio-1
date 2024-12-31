@@ -4,6 +4,7 @@ dbt_stocks:
       account: 
       database: 
       password: 
+      private_key: 
       role: 
       schema: 
       threads: 1 
