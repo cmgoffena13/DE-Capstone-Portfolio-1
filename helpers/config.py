@@ -24,5 +24,5 @@ SNOWFLAKE_CREDS = {
     "warehouse": SF_WAREHOUSE,
     "database": SF_DATABASE,
     "schema": SF_SCHEMA,
-    "private_key_file": private_key_path
+    "private_key_file": private_key_path,
 }

@@ -39,7 +39,8 @@ def stock_market_tickers():
         api = BaseHook.get_connection("stock_api")
         api_key = api.extra_dejson["stock_api_key"]
         endpoint = (
-            f"/v3/reference/tickers?market=stocks&active=true&limit=1000&date={ds}&apiKey={api_key}"
+            f"/v3/reference/tickers?market=stocks&active=true"
+            f"&limit=1000&date={ds}&apiKey={api_key}"
         )
 
         url = f"{api.host}{endpoint}"

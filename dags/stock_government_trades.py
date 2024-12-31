@@ -8,6 +8,7 @@ import boto3
 import botocore
 import requests
 from airflow.decorators import dag, task
+from airflow.exceptions import AirflowSkipException
 from airflow.hooks.base import BaseHook
 from snowflake.snowpark import Session
 
@@ -31,7 +32,21 @@ def stock_government_trades():
         url = f"{api.host}{endpoint}&date={ds}&token={api_key}"
 
         response = requests.get(url=url)
-        condition = bool(response.status_code == 200 and str(response.text) != "[]")
+        condition = bool(response.status_code == 200)
+        return condition
+
+    @task
+    def is_government_data_available(ds: str, **kwargs):
+        endpoint = "/api/v1/gov/usa/congress/trades?pagesize=1"
+        api = BaseHook.get_connection("government_api")
+        api_key = api.extra_dejson["government_api_key"]
+        url = f"{api.host}{endpoint}&date={ds}&token={api_key}"
+        response = requests.get(url=url)
+        condition = bool(response.status_code == 200 and response.text != "[]")
+        kwargs["ti"].xcom_push(key="data_available", value=condition)
+        if not condition:
+            raise AirflowSkipException("Data not available, skipping DAG")
+
         return condition
 
     @task(retries=5, retry_delay=60)
@@ -105,11 +120,12 @@ def stock_government_trades():
         session.close()
 
     api_available = is_government_api_available()
+    data_available = is_government_data_available()
     extract = get_government_trades()
     store = store_government_trades(extract)
     sf_insert = sf_copy_government_trades()
 
-    api_available >> extract >> store >> sf_insert
+    api_available >> data_available >> extract >> store >> sf_insert
 
 
 stock_government_trades()

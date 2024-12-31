@@ -54,7 +54,9 @@ def stock_market_close():
         """
         tickers_df = session.sql(query)
 
-        data = [(row.SECURITY_TICKER, row.TRANSACTION_DATE) for row in tickers_df.collect()]
+        data = [
+            (row.SECURITY_TICKER, row.TRANSACTION_DATE) for row in tickers_df.collect()
+        ]
         # Add in Standard & Poor's 500 for market comparison
         # data.append(('I:SPX', ds)) - need more money, bleh
 
@@ -71,7 +73,7 @@ def stock_market_close():
                     print(
                         f"Data not found for ticker: {ticker} on {transaction_date}."
                         "Continuing..."
-                        )
+                    )
                     continue
                 else:
                     raise (error)
