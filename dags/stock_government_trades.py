@@ -36,14 +36,19 @@ def stock_government_trades():
         return condition
 
     @task
-    def is_government_data_available(ds: str, **kwargs):
-        endpoint = "/api/v1/gov/usa/congress/trades?pagesize=1"
+    def is_government_data_available(ds: str, ti):
+        endpoint = "/api/v1/gov/usa/congress/trades"
         api = BaseHook.get_connection("government_api")
         api_key = api.extra_dejson["government_api_key"]
-        url = f"{api.host}{endpoint}&date={ds}&token={api_key}"
-        response = requests.get(url=url)
+
+        url = f"{api.host}{endpoint}"
+        querystring = {"token": api_key, "date": ds, "pagesize": 1}
+        print("ds is: " + str(ds))
+        response = requests.get(url=url, params=querystring)
+        print(response.json())
         condition = bool(response.status_code == 200 and response.text != "[]")
-        kwargs["ti"].xcom_push(key="data_available", value=condition)
+        ti.xcom_push(key="data_available", value=condition)
+
         if not condition:
             raise AirflowSkipException("Data not available, skipping DAG")
 
@@ -51,23 +56,23 @@ def stock_government_trades():
 
     @task(retries=5, retry_delay=60)
     def get_government_trades(ds: str):
+        endpoint = "/api/v1/gov/usa/congress/trades"
         api = BaseHook.get_connection("government_api")
         api_key = api.extra_dejson["government_api_key"]
-        endpoint = (
-            f"/api/v1/gov/usa/congress/trades?pagesize=1000&date={ds}&token={api_key}"
-        )
 
         url = f"{api.host}{endpoint}"
+        querystring = {"token": api_key, "date": ds, "pagesize": 1000}
+        print("ds is: " + str(ds))
 
         # Fetch the initial page
-        response = fetch_with_retries(url)
+        response = fetch_with_retries(url=url, params=querystring)
         trades = response["data"]
 
         # Fetch the next pages until exhausted
         while True:
-            page_number = 1
-            next_url = url + f"&page={page_number}"
-            response = fetch_with_retries(next_url)
+            page_number = 2
+            querystring["page"] = page_number
+            response = fetch_with_retries(url=url, params=querystring)
 
             if str(response) == "[]":
                 break

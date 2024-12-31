@@ -9,10 +9,15 @@ from airflow.operators.python import PythonOperator
 default_args = {"depends_on_past": False}
 
 
-def check_triggered_dag_result(**kwargs):
-    result = kwargs["ti"].xcom_pull(
-        task_ids="trigger_stock_government_trades_dag", key="data_available"
+def check_triggered_dag_result(ti):
+    result = ti.xcom_pull(
+        dag_id="stock_government_trades",  # Specify the triggered DAG ID
+        task_ids="is_government_data_available",  # Task name from the triggered DAG
+        key="data_available"
     )
+    print(result)
+    if result is None:
+        raise Exception("Xcom 'data available' not received")
     if not result:
         raise AirflowSkipException("No data available, skipping pipeline")
 
@@ -30,8 +35,11 @@ def main():
     trigger_stock_government_trades_dag = TriggerDagRunOperator(
         task_id="trigger_stock_government_trades_dag",
         trigger_dag_id="stock_government_trades",
-        conf={"run_date": "{{ ds }}"},
+        # conf={"run_date": "{{ ds }}"},
         wait_for_completion=True,
+        logical_date="{{ ds }}",
+        poke_interval=30,
+        trigger_run_id="{{ run_id }}"
     )
 
     check_data_availability = PythonOperator(
@@ -43,22 +51,31 @@ def main():
     trigger_stock_market_close_dag = TriggerDagRunOperator(
         task_id="trigger_stock_market_close_dag",
         trigger_dag_id="stock_market_close",
-        conf={"run_date": "{{ ds }}"},
+        # conf={"run_date": "{{ ds }}"},
         wait_for_completion=True,
+        logical_date="{{ ds }}",
+        poke_interval=30,
+        trigger_run_id="{{ run_id }}"
     )
 
     trigger_stock_market_tickers_dag = TriggerDagRunOperator(
         task_id="trigger_stock_market_tickers_dag",
         trigger_dag_id="stock_market_tickers",
-        conf={"run_date": "{{ ds }}"},
+        # conf={"run_date": "{{ ds }}"},
         wait_for_completion=True,
+        logical_date="{{ ds }}",
+        poke_interval=30,
+        trigger_run_id="{{ run_id }}"
     )
 
     trigger_dbt_run_dag = TriggerDagRunOperator(
         task_id="trigger_dbt_run_dag",
         trigger_dag_id="dbt_run",
-        conf={"run_date": "{{ ds }}"},
+        # conf={"run_date": "{{ ds }}"},
         wait_for_completion=True,
+        logical_date="{{ ds }}",
+        poke_interval=30,
+        trigger_run_id="{{ run_id }}"
     )
 
     (
