@@ -13,7 +13,7 @@ def check_triggered_dag_result(ti):
     result = ti.xcom_pull(
         dag_id="stock_government_trades",  # Specify the triggered DAG ID
         task_ids="is_government_data_available",  # Task name from the triggered DAG
-        key="data_available"
+        key="data_available",
     )
     print(result)
     if result is None:
@@ -39,7 +39,7 @@ def main():
         wait_for_completion=True,
         logical_date="{{ ds }}",
         poke_interval=30,
-        trigger_run_id="{{ run_id }}"
+        trigger_run_id="{{ run_id }}",
     )
 
     check_data_availability = PythonOperator(
@@ -55,7 +55,7 @@ def main():
         wait_for_completion=True,
         logical_date="{{ ds }}",
         poke_interval=30,
-        trigger_run_id="{{ run_id }}"
+        trigger_run_id="{{ run_id }}",
     )
 
     trigger_stock_market_tickers_dag = TriggerDagRunOperator(
@@ -65,7 +65,7 @@ def main():
         wait_for_completion=True,
         logical_date="{{ ds }}",
         poke_interval=30,
-        trigger_run_id="{{ run_id }}"
+        trigger_run_id="{{ run_id }}",
     )
 
     trigger_dbt_run_dag = TriggerDagRunOperator(
@@ -75,7 +75,7 @@ def main():
         wait_for_completion=True,
         logical_date="{{ ds }}",
         poke_interval=30,
-        trigger_run_id="{{ run_id }}"
+        trigger_run_id="{{ run_id }}",
     )
 
     (
