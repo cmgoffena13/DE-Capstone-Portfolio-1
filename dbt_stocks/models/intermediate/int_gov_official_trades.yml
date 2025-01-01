@@ -22,7 +22,7 @@ models:
         description: "Date report was filed to government regarding trade"
 
       - name: report_id
-        data_type: number
+        data_type: varchar
         description: "Unique ID for report, can involve multiple trades"
 
       - name: security_name

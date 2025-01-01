@@ -97,6 +97,7 @@ def stock_market_tickers():
 
         truncate = f"TRUNCATE TABLE {SF_DATABASE}.staging.stock_tickers;"
 
+        print("sql: " + sql_query)
         session.sql(truncate).collect()
         session.sql(sql_query).collect()
         session.close()

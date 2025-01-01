@@ -12,7 +12,7 @@ SELECT
     g.notification_date,
     g.ownership,
     g.report_date,
-    g.report_id,
+    CAST(g.report_id AS STRING) AS report_id,
     g.security_name,
     g.security_ticker,
     g.security_type,

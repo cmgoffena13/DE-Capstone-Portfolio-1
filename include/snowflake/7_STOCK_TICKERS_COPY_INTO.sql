@@ -30,4 +30,4 @@ FROM (
     (FILE_FORMAT => 'STOCK_DB.file_formats.json_format')
 )
 PATTERN = '.*tickers.*'
-ON_ERROR = 'SKIP_FILE_10%';
+--ON_ERROR = 'SKIP_FILE_10%';

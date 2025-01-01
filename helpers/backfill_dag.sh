@@ -6,9 +6,16 @@ if [ -z "$1" ]; then
     exit 1
 fi
 
+# Check if Incremental Window Size was provided as an argument
+if [ -z "$2" ]; then
+    echo "Please provide a Incremental Window Size as the second argument."
+    exit 1
+fi
+
 DAG_ID=$1
+BLOCK_SIZE=$2 - 1 # Does not include start date so have to minus one
 START_DATE="2024-12-01"  # Starting date for backfill
-END_DATE=$(date -I -d "$START_DATE + 6 days")
+END_DATE=$(date -I -d "$START_DATE + $BLOCK_SIZE days")
 TODAY=$(date -I)  # Current date in ISO format
 
 echo "Starting backfill for DAG: $DAG_ID"
@@ -23,14 +30,17 @@ do
     while true
     do
         # Wait
+        echo "Waiting 2 minutes..."
         sleep 120
 
         # Check if all days have completed successfully
         all_success=true  # Flag to track success for all 7 days
-        for DATE in $(seq 0 6); do
+        for DATE in $(seq 0 $BLOCK_SIZE); do
             CHECK_DATE=$(date -I -d "$START_DATE + $DATE days")
+            echo "Checking status for $CHECK_DATE..."
             STATUS=$(airflow dags state $DAG_ID $CHECK_DATE)
 
+            echo "STATUS: $STATUS"
             if [[ "$STATUS" == "success" ]]; then
                 echo "Run for $CHECK_DATE completed successfully."
             elif [[ "$STATUS" == "running" ]]; then
@@ -49,11 +59,11 @@ do
             echo "All runs from $START_DATE to $END_DATE completed successfully."
             break
         else
-            echo "Not all runs are complete. Checking again in 1 minute..."
+            echo "Not all runs are complete. Checking again in 2 minutes..."
         fi
     done
 
-    # Increment the window to the next 7-day period
+    # Increment the window to the next period
     START_DATE=$(date -I -d "$END_DATE + 1 day")
-    END_DATE=$(date -I -d "$START_DATE + 6 days")
+    END_DATE=$(date -I -d "$START_DATE + $BLOCK_SIZE days")
 done

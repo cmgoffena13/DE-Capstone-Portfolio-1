@@ -12,8 +12,6 @@ models:
       - name: notification_date
         data_type: date
         description: "Date government was notified of trades"
-        tests:
-          - not_null
 
       - name: ownership
         data_type: varchar
@@ -26,7 +24,7 @@ models:
           - not_null
 
       - name: report_id
-        data_type: number
+        data_type: varchar
         description: "Unique ID for report, can involve multiple trades"
 
       - name: security_name

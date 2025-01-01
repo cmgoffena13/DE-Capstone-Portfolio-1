@@ -1,5 +1,6 @@
 import random
 import time
+from datetime import datetime, timedelta
 
 import requests
 
@@ -31,3 +32,12 @@ def fetch_with_retries(url, params=None, max_retries=10, initial_delay=12):
         else:
             response.raise_for_status()  # Raise an exception for other error codes
     raise Exception("Exceeded maximum retries for the API request")
+
+
+def get_closest_past_monday(date):
+    date = datetime.fromisoformat(date)
+    # Calculate the number of days to subtract to reach the closest past Monday
+    days_to_subtract = (date.weekday() - 0) % 7  # 0 represents Monday
+    # Subtract that number of days to get the previous Monday
+    closest_monday = date - timedelta(days=days_to_subtract)
+    return closest_monday.date()

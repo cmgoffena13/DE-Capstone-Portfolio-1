@@ -23,7 +23,7 @@ FROM (
         $1:notification_date::DATE AS notification_date,
         $1:ownership::STRING AS ownership,
         $1:report_date::DATE AS report_date,
-        $1:report_id::BIGINT AS report_id,
+        $1:report_id::STRING AS report_id,
         $1:security:name::STRING AS security_name,
         $1:security:ticker::STRING AS security_ticker,
         $1:security:type::STRING AS security_type,
@@ -35,4 +35,4 @@ FROM (
     (FILE_FORMAT => 'STOCK_DB.file_formats.json_format')
 )
 PATTERN = '.*government_trades.*'
-ON_ERROR = 'SKIP_FILE_10%';
+--ON_ERROR = 'SKIP_FILE_10%';

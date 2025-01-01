@@ -15,4 +15,4 @@ FROM (
     (FILE_FORMAT => 'STOCK_DB.file_formats.json_format')
 )
 PATTERN = '.*market_close.*'
-ON_ERROR = 'SKIP_FILE_10%';
+--ON_ERROR = 'SKIP_FILE_10%';

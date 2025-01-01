@@ -12,7 +12,7 @@ from airflow.hooks.base import BaseHook
 from snowflake.snowpark import Session
 
 from helpers.config import AWS_KEY, AWS_SECRET_KEY, SNOWFLAKE_CREDS
-from helpers.utils import fetch_with_retries
+from helpers.utils import fetch_with_retries, get_closest_past_monday
 
 
 # "0 0 * * 2-6"
@@ -27,8 +27,10 @@ def stock_market_close():
 
     @task.sensor(poke_interval=5, timeout=30, mode="poke")
     def is_market_close_api_available(ds: str):
-        # Use apple as a default
-        endpoint = f"/v1/open-close/AAPL/{ds}?adjusted=true"
+        # Use Apple and closest Monday as a default
+        closest_monday = get_closest_past_monday(ds)
+        print("Closest Monday: " + str(closest_monday))
+        endpoint = f"/v1/open-close/AAPL/{closest_monday}?adjusted=true"
         api = BaseHook.get_connection("stock_api")
         api_key = api.extra_dejson["stock_api_key"]
         url = f"{api.host}{endpoint}&apiKey={api_key}"
@@ -52,6 +54,7 @@ def stock_market_close():
         WHERE SECURITY_TICKER != ''
             AND REPORT_DATE = '{date}'
         """
+        print(query)
         tickers_df = session.sql(query)
 
         data = [
@@ -59,6 +62,8 @@ def stock_market_close():
         ]
         # Add in Standard & Poor's 500 for market comparison
         # data.append(('I:SPX', ds)) - need more money, bleh
+
+        session.close()
 
         records = []
         for ticker, transaction_date in data:
@@ -121,6 +126,7 @@ def stock_market_close():
         with open(copy_into_sql_path, "r") as file:
             sql_query = file.read()
 
+        print("sql: " + sql_query)
         session.sql(sql_query).collect()
         session.close()
 

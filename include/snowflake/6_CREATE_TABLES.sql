@@ -66,7 +66,7 @@ CREATE OR REPLACE TABLE source.government_trades (
     notification_date DATE,
     ownership STRING,
     report_date DATE,
-    report_id BIGINT,
+    report_id STRING,
     security_name STRING,
     security_ticker STRING,
     security_type STRING,

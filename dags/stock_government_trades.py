@@ -121,6 +121,7 @@ def stock_government_trades():
         with open(copy_into_sql_path, "r") as file:
             sql_query = file.read()
 
+        print("sql: " + sql_query)
         session.sql(sql_query).collect()
         session.close()
 
