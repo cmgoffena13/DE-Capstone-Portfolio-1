@@ -135,7 +135,7 @@ def stock_market_close():
     def sf_handle_duplicates():
         session = Session.builder.configs(SNOWFLAKE_CREDS).create()
 
-        sql_query = 'CALL handle_stock_market_duplicates();'
+        sql_query = "CALL handle_stock_market_duplicates();"
 
         print("sql: " + sql_query)
         session.sql(sql_query).collect()
