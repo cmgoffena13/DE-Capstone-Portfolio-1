@@ -14,7 +14,7 @@ This project combines stock information with government official's trading recor
 ## Dashboard
 ![Dashboard Image 1](static/Dashboard_1.PNG "Dashboard Image 1")
 ![Dashboard Image 2](static/Dashboard_2.PNG "Dashboard Image 2")
-<sup>Link: <a href=https://lookerstudio.google.com/reporting/8d054d46-3ad9-4a95-a42a-2456af1f8f2e>Government Officials Trades</a> ( If the graphs aren't loading, my snowflake instance may not have enough credits, come back later :P )</sup>
+<sup>Link: <a href=https://lookerstudio.google.com/reporting/8d054d46-3ad9-4a95-a42a-2456af1f8f2e>Government Officials Trades</a> - data starts 2024-12-01 ( If the graphs aren't loading, my snowflake instance may not have enough credits, come back later :P )</sup>
 
 
 ## Data Warehouse Overview
@@ -243,7 +243,7 @@ I decided on creating a staging table for the initial data and then having a sto
 ## DBT Write-Audit-Publish Pattern
 I had a lot of fun trying to figure out how to efficiently audit the data. I treated it as a challenge of "what if these pipelines became very large". DBT is great to easily get started and just fire away queries at your engine, but it takes work to figure out how to use it at scale. 
 
-My solution was to write the models to query a date that was supplied at run time. This allowed increments to happen and audits on the incremental data specifically so I wasn't auditing old data and wasting compute. I wrote a detailed article on how I set up a Write-Audit-Publish pattern in DBT that I used in this project. Link: https://medium.com/@cortlandgoffena/dbt-write-audit-publish-9b5fc6bbd73d
+My solution was to write the models to query a date that was supplied at run time. This allowed increments to happen and audits on the incremental data specifically so I wasn't auditing old data and wasting compute. I wrote a <a href=https://medium.com/@cortlandgoffena/dbt-write-audit-publish-9b5fc6bbd73d>detailed article</a> on how I set up a Write-Audit-Publish pattern in DBT that I used in this project.
 
 
 ## DBT Tags
@@ -264,11 +264,15 @@ One of the challenges I ran into with this project was the orchestration of all 
 
 There is more than one way to do this. I could also have setup my DBT run to have custom sensors on the data in the Snowflake tables or used Datasets. This is probably a better approach since it decouples and looks at data dependencies instead of task dependencies.
 
+Note: There was an error/bug that kept occurring during backfilling. The dag's triggered by the TriggerDagRunOperator kept stalling in "queued" state. I ended up just writing a bash script to simulate the backfill command. This actually became very useful to easily clear tasks that failed after I fixed them to re-trigger them. If you clear a task in Airflow that was "backfilled", only a backfill can re-fill it. That can be really annoying sometimes so I ended up avoiding that!
+
 ## Efficiencies
 Initial design pulled the closing stats for every ticker through the Polygon API. Given my analysis was around government officials' trades, I ended up modifying the logic to only grab the tickers that had been traded. I also modified my pipeline to only run everything if government trade data was available. This made it small, concise, and efficient. If it wasn't a personal project, I probably would store information about all tickers. It could come in handy later.
 
 ## Setup
-I you want to spin up the project itself you'll need a couple environment variables. The names are supplied in the `example.env` file. You'll also want to create a DBT profiles yml. An example file is included: `example.profiles.yml`.
+This project was spun up using the Astro CLI, so you will need that installed.
+
+You'll need a couple environment variables. The names are supplied in the `example.env` file. You'll also want to create a DBT profiles yml. An example file is included: `example.profiles.yml`.
 
 You'll also need to create two connections in Airflow for the APIs and add the API Keys in there as config.  
 
