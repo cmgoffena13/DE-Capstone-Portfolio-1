@@ -14,7 +14,7 @@ This project combines stock information with government official's trading recor
 ## Dashboard
 ![Dashboard Image 1](static/Dashboard_1.PNG "Dashboard Image 1")
 ![Dashboard Image 2](static/Dashboard_2.PNG "Dashboard Image 2")
-<sup>Link: <a href=https://lookerstudio.google.com/reporting/8d054d46-3ad9-4a95-a42a-2456af1f8f2e>Government Officials Trades</a> - data starts 2024-12-01 ( If the graphs aren't loading, my snowflake instance may not have enough credits, come back later :P )</sup>
+<sup>Link: <a href=https://lookerstudio.google.com/reporting/8d054d46-3ad9-4a95-a42a-2456af1f8f2e>Government Officials Stock Trades</a> - reports 2024-12-01 forward ( If the graphs aren't loading, my snowflake instance may not have enough credits, come back later :P )</sup>
 
 
 ## Data Warehouse Overview
@@ -263,7 +263,40 @@ One of the challenges I ran into with this project was the orchestration of all 
 
 There is more than one way to do this. I could also have setup my DBT run to have custom sensors on the data in the Snowflake tables or used Datasets. This is probably a better approach since it decouples and looks at data dependencies instead of task dependencies.
 
-Note: There was an error/bug that kept occurring during backfilling. The dag's triggered by the TriggerDagRunOperator kept stalling in "queued" state. I ended up just writing a bash script to simulate the backfill command. This actually became very useful to easily clear tasks that failed after I fixed them to re-trigger them. If you clear a task in Airflow that was "backfilled", only a backfill can re-fill it. That can be really annoying sometimes so I ended up avoiding that!
+Note: There was an error/bug that kept occurring during backfilling. The dag's triggered by the TriggerDagRunOperator kept stalling in "queued" state. I ended up just writing a bash script to simulate the backfill command. This actually became very useful to easily clear tasks that failed after I fixed them to re-trigger them since the pipeline is idempotent. If you clear a task in Airflow that was "backfilled", only a backfill can re-fill it. That can be really annoying sometimes so I ended up avoiding that!
 
 ## Efficiencies
 Initial design pulled the closing stats for every ticker through the Polygon API. Given my analysis was around government officials' trades, I ended up modifying the logic to only grab the tickers that had been traded. I also modified my pipeline to only run everything if government trade data was available. This made it small, concise, and efficient. If it wasn't a personal project, I probably would store information about all tickers. It could come in handy later.
+
+## Snowflake Deletes
+Snowflake does not allow for an easy way of de-duplicating data and I found this out the hard way. In SQL Server I would do something like this:
+```sql
+;WITH DELETE_CTE AS (
+  SELECT
+  ...,
+  ROW_NUMBER() OVER (PARTITION BY ... ORDER BY ...) AS row_num
+  FROM Table_A
+)
+DELETE FROM Table_A WHERE row_num > 1
+```
+Snowflake does not allow deletes through the use of CTE's, so the below is what I had to hack together to ensure de-duplication in one instance, and yes it is a lot more code:
+```sql
+CREATE OR REPLACE TRANSIENT TABLE duplicate_holder AS (
+    SELECT
+    ...
+    FROM Table_A
+    GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 --Group by EVERY column
+    HAVING COUNT(*) > 1
+);
+
+DELETE FROM Table_A AS a
+USING duplicate_holder AS b
+WHERE a.column_1 = b.column_1 --Join on EVERY column
+  AND a.column_2 = b.column_2
+  AND a.column_3 = b.column_3
+  ...;
+
+INSERT INTO Table_A
+SELECT * FROM duplicate_holder;
+```
+Pretty crazy, right? New technology is great, but the flexibility normally means other things were given up. I have not found a better way to do it yet, so if you know please tell me!
