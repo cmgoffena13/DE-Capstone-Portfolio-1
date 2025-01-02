@@ -1,5 +1,5 @@
 # Government Officials Stock Trades
-This project combines stock information with government official's trading records (Senate & House of Representatives). Daily batch processing brings in data from the Polygon and Benzinga APIs to showcase trading information. Explore how your state representatives are trading and what committees they are on that may influence their decisions...
+This project combines stock information with government official's trading records (Senate & House of Representatives). Daily batch processing brings in data from the Polygon and Benzinga APIs to showcase trading information. Explore how your state representatives are trading, approximate amounts that are traded, and what committees they are on that may influence their decisions...
 
 ## Technologies Used
  ![Docker](https://img.shields.io/badge/-Docker-2496ED?style=flat&logoColor=white&logo=docker)
@@ -21,6 +21,7 @@ This project combines stock information with government official's trading recor
 ![Data Warehouse Overview](static/Data_Warehouse_Overview.png "Data Warehouse Overview")
 
 ## Table of Contents
+1. [Introduction](#Introduction)
 1. [Technology Choices](#Technology-Choices)
 2. [Initial Data Investigations - Polygon API](#Initial-Data-Investigations---Polygon-API)
     1. [Tickers API EndPoint](#Tickers-API-EndPoint)
@@ -37,15 +38,20 @@ This project combines stock information with government official's trading recor
 5. [DBT Tags](#DBT-Tags)
 6. [Airflow Orchestration](#Airflow-Orchestration)
 7. [Efficiencies](#Efficiencies)
+8. [Snowflake Deletes](#Snowflake-Deletes)
+9. [Summary](#Summary)
+
+## Introduction
+This portfolio project is designed to showcase my ability to learn new technologies. I created this project during the month of December, 2024. Every technology chosen in this project I had limited knowledge in. Each section is commentary on the project that includes my learnings along the way. Enjoy!
 
 ## Technology Choices
 From a skillset perspective I am proficient in SQL and Python, which led me to choose these tools:
- - **Airflow**: dependable and mature orchestration tool to handle dependencies
- - **Docker**: used to easily spin up Astronomer/Airflow environment and great environment reproducibility
- - **AWS**: most mature cloud provider and easy to integrate with using the Python AWS SDK
- - **Snowflake**: easy integration due to SnowPark and Snowflake's COPY INTO command. Makes it super easy to move data from S3 buckets into the warehouse. All Snowflake queries can be found in `include/snowflake`
- - **DBT**: popular SQL abstraction tool that allowed me to easily document the SQL models, write tests, and handle data lineage 
- - **Looker**: I shopped around for presentation tools, but Looker's free tier actually allowed me to publicly share a dashboard so I was sold
+ - **Airflow**: dependable and mature orchestration tool to handle dependencies. Other choice was Dagster due to its great integration with DBT.
+ - **Docker**: used to easily spin up Astronomer/Airflow environment and great environment reproducibility.
+ - **AWS**: most mature cloud provider and easy to integrate with using the Python AWS SDK. I had experience with Azure but wanted to expand my skillset.
+ - **Snowflake**: easy integration due to SnowPark and Snowflake's COPY INTO command. Makes it super easy to move data from cloud storage into the warehouse. I had experience with DataBricks, but DBT and Snowflake seemed like a great hassle-free combo. All Snowflake queries can be found in `include/snowflake/`.
+ - **DBT**: popular SQL abstraction tool that allowed me to easily keep SQL in source control, write tests, and handle data lineage. Other choice was SQLMesh, but DBT's popularity won out.
+ - **Looker**: Looker's free tier allowed me to publicly share a dashboard. I checked out Tableau and Preset, but their sharing options were limited.
 
 ## Initial Data Investigations - Polygon API
 Taking a look at the Polygon API JSON results that were available. Polygon turned out to be really great, with affordable subscriptions for their endpoints. It is always important to look at the data you'll be working with before you start!
@@ -232,21 +238,22 @@ FROM (
 PATTERN = '.*market_close.*'
 ON_ERROR = 'SKIP_FILE_10%';
 ```
-<sup>The ON_ERROR argument tells the process to skip any files that errored for more than 10% of the rows.</sup>
+<sup>The ON_ERROR argument tells the process to skip any files that errored for more than 10% of the rows. I later removed this so I could be alerted of errors.</sup>
 
 ### Tickers Integration
-The tickers integration is unique as I am grabbing the full list of tickers every time. The initial designs posed a problem. Snowpark only allows overwrite or append. So I could overwrite the table every run or truncate the table and then append records into it. Either way, if an error happened, it could leave the tickers table empty or missing data. I didn't want that to happen as the Market Open/Close API call uses the table to loop through every ticker and call the API. I needed to make sure that if the integration failed, the table would still have data from the last run.  
+The tickers integration is unique as I am grabbing the full list of tickers every time. The initial designs posed a problem. Snowpark only allows overwrite or append. So I could overwrite the table every run or truncate the table and then append records into it. **Either way, if an error happened, it could leave the tickers table empty or missing data.** I didn't want that to happen as the Market Open/Close API call uses the table to loop through every ticker and call the API. I needed to make sure that if the integration failed, the table would still have data from the last run.  
 
-I decided on creating a staging table for the initial data and then having a stored procedure that would merge the data into the tickers table, making it an exact copy. This allowed any updates to occur as needed. There is still the possibility of no data being inserted and the merge then matches the staging, deleting all the records. It's unlikely to occur though since the API needs to be available (a sensor checks availability) for the tasks to trigger. My project demanded only so much bullet-proofing.
+I decided on creating a staging table for the initial data and then having a stored procedure that would merge the data into the tickers table, making it an exact copy. This allowed any updates to occur as needed. There is still the possibility of no data being inserted and the merge then matches the staging, deleting all the records. It's unlikely to occur though since the API needs to be available (a sensor checks availability) for the tasks to trigger. My project demanded only so much bullet-proofing. I ended up changing some of the initial design mentioned here: [Efficiencies](#Efficiencies)
 
 ## DBT Write-Audit-Publish Pattern
 I had a lot of fun trying to figure out how to efficiently audit the data. I treated it as a challenge of "what if these pipelines became very large". DBT is great to easily get started and just fire away queries at your engine, but it takes work to figure out how to use it at scale. 
 
 My solution was to write the models to query a date that was supplied at run time. This allowed increments to happen and audits on the incremental data specifically so I wasn't auditing old data and wasting compute. I wrote a <a href=https://medium.com/@cortlandgoffena/dbt-write-audit-publish-9b5fc6bbd73d>detailed article</a> on how I set up a Write-Audit-Publish pattern in DBT that I used in this project.
 
+There were quite a few times that data issues found their way into snowflake  due to my code. Having the bad data not make its way to the published models and being able to check the data in the audit tables was a life-saver.
 
 ## DBT Tags
-One of the challenges I faced in this project was how to have DBT step through the Write-Audit-Publish pattern easily. I found out how to do it step by step for one model, but then triggering each step of the pattern for all the models was challenging. I landed on adding tags to each model so that I could easily trigger the audit models (tagged as "audit"), then test them, and then trigger the incremental models. You'll notice my data warehouse diagram at the beginning of the documentation is broken out into layers. These are easily triggered through DBT with tagging. Below is an example of how to trigger DBT models that are tagged:
+One of the challenges I faced in this project was how to have DBT step through the Write-Audit-Publish pattern easily. I found out how to do it step by step for one model, but then triggering each step of the pattern for all the models was challenging. I landed on adding tags to each model so that I could easily trigger the audit models (tagged as "audit"), then test them, and then trigger the incremental models. You'll notice my [data warehouse diagram](#Data-Warehouse-Overview) at the beginning of the documentation is broken out into layers. These are easily triggered through DBT with tagging. Below is an example of how to trigger DBT models that are tagged:
 ```bash
 dbt run -s tag:audit
 ```
@@ -263,10 +270,10 @@ One of the challenges I ran into with this project was the orchestration of all 
 
 There is more than one way to do this. I could also have setup my DBT run to have custom sensors on the data in the Snowflake tables or used Datasets. This is probably a better approach since it decouples and looks at data dependencies instead of task dependencies.
 
-Note: There was an error/bug that kept occurring during backfilling. The dag's triggered by the TriggerDagRunOperator kept stalling in "queued" state. I ended up just writing a bash script to simulate the backfill command. This actually became very useful to easily clear tasks that failed after I fixed them to re-trigger them since the pipeline is idempotent. If you clear a task in Airflow that was "backfilled", only a backfill can re-fill it. That can be really annoying sometimes so I ended up avoiding that!
+Note: There was an error/bug that kept occurring during backfilling. A day of research didn't solve it. The dag's triggered by the TriggerDagRunOperator kept stalling in "queued" state. I ended up just writing a bash script `helpers/backfill_dag.sh` to simulate the backfill command. This actually became very useful to easily clear tasks that failed after I fixed them to re-trigger them since the pipeline is idempotent. If you clear a task in Airflow that was "backfilled", only a backfill can re-fill it. That can be really annoying sometimes so I ended up avoiding that!
 
 ## Efficiencies
-Initial design pulled the closing stats for every ticker through the Polygon API. Given my analysis was around government officials' trades, I ended up modifying the logic to only grab the tickers that had been traded. I also modified my pipeline to only run everything if government trade data was available. This made it small, concise, and efficient. If it wasn't a personal project, I probably would store information about all tickers. It could come in handy later.
+Initial design pulled the closing stats for every ticker through the Polygon API. I utilized the Tickers table to create a for-loop for the API. Given my analysis was around government officials' trades, I modified the logic later to only grab the tickers from the government officials table that had been traded. I also modified my pipeline to only run everything if government trade data was available. This made it small, concise, and efficient. If it wasn't a personal project, I probably would store information about all tickers. It could come in handy later.
 
 ## Snowflake Deletes
 Snowflake does not allow for an easy way of de-duplicating data and I found this out the hard way. In SQL Server I would do something like this:
@@ -300,3 +307,6 @@ INSERT INTO Table_A
 SELECT * FROM duplicate_holder;
 ```
 Pretty crazy, right? New technology is great, but the flexibility normally means other things were given up. I have not found a better way to do it yet, so if you know please tell me!
+
+## Summary
+As you can see with the diversity of information and sections, not every data project is simple and easy; This was messy and challenging. Pivoting constantly with design, researching new technologies, and figuring out how to apply best practices and designs within their constraints. There are certainly more lessons learned than what is detailed here. This was the first time I really dove into DBT, AWS, Snowflake, Looker, Bash, & Airflow. I leaned on my knowledge of SQL, Python, Azure, PowerBI, & Powershell to translate my skills to new technologies and test my boundaries. It was a lot of fun!
