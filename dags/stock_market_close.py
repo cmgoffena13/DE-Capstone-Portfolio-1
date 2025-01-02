@@ -52,6 +52,7 @@ def stock_market_close():
         SECURITY_TICKER, TRANSACTION_DATE
         FROM SOURCE.GOVERNMENT_TRADES
         WHERE SECURITY_TICKER != ''
+            AND LENGTH(SECURITY_TICKER) > 0
             AND REPORT_DATE = '{date}'
         """
         print(query)
@@ -130,12 +131,23 @@ def stock_market_close():
         session.sql(sql_query).collect()
         session.close()
 
+    @task(retries=5, retry_delay=30)
+    def sf_handle_duplicates():
+        session = Session.builder.configs(SNOWFLAKE_CREDS).create()
+
+        sql_query = 'CALL handle_stock_market_duplicates();'
+
+        print("sql: " + sql_query)
+        session.sql(sql_query).collect()
+        session.close()
+
     api_available = is_market_close_api_available()
     extract = get_market_close()
     store = store_market_close(extract)
     sf_insert = sf_copy_market_close()
+    sf_dedup = sf_handle_duplicates()
 
-    api_available >> extract >> store >> sf_insert
+    api_available >> extract >> store >> sf_insert >> sf_dedup
 
 
 stock_market_close()

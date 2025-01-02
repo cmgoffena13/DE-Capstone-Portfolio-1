@@ -12,9 +12,13 @@ This project combines stock information with government official's trading recor
  ![Git](https://img.shields.io/badge/-Git-F05032?style=flat&logoColor=white&logo=git)
 
 ## Dashboard
+![Dashboard Image 1](static/Dashboard_1.PNG "Dashboard Image 1")
+![Dashboard Image 2](static/Dashboard_2.PNG "Dashboard Image 2")
+<sup>Link: <a href=https://lookerstudio.google.com/reporting/8d054d46-3ad9-4a95-a42a-2456af1f8f2e>Government Officials Trades</a> ( If the graphs aren't loading, my snowflake instance may not have enough credits, come back later :P )</sup>
+
 
 ## Data Warehouse Overview
-![Data Warehouse Overview](Data_Warehouse_Overview.png "Data Warehouse Overview")
+![Data Warehouse Overview](static/Data_Warehouse_Overview.png "Data Warehouse Overview")
 
 ## Table of Contents
 1. [Technology Choices](#Technology-Choices)

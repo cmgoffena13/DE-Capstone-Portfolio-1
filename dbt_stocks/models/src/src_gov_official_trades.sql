@@ -32,8 +32,12 @@ SELECT
     report_date,
     report_id,
     security_name,
-    CASE WHEN security_ticker = '' THEN NULL ELSE security_ticker END AS security_ticker,
-    CASE WHEN security_type = '' THEN NULL ELSE security_type END AS security_type,
+    CASE WHEN security_ticker = '' THEN NULL 
+         WHEN LENGTH(security_ticker) > 0 THEN security_ticker
+         ELSE NULL END AS security_ticker,
+    CASE WHEN security_type = '' THEN NULL 
+         WHEN LENGTH(security_type) > 0 THEN security_type
+         ELSE NULL END AS security_type,
     transaction_date,
     transaction_id,
     transaction_type,
