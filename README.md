@@ -37,7 +37,6 @@ This project combines stock information with government official's trading recor
 5. [DBT Tags](#DBT-Tags)
 6. [Airflow Orchestration](#Airflow-Orchestration)
 7. [Efficiencies](#Efficiencies)
-7. [Setup](#Setup)
 
 ## Technology Choices
 From a skillset perspective I am proficient in SQL and Python, which led me to choose these tools:
@@ -268,12 +267,3 @@ Note: There was an error/bug that kept occurring during backfilling. The dag's t
 
 ## Efficiencies
 Initial design pulled the closing stats for every ticker through the Polygon API. Given my analysis was around government officials' trades, I ended up modifying the logic to only grab the tickers that had been traded. I also modified my pipeline to only run everything if government trade data was available. This made it small, concise, and efficient. If it wasn't a personal project, I probably would store information about all tickers. It could come in handy later.
-
-## Setup
-This project was spun up using the Astro CLI, so you will need that installed.
-
-You'll need a couple environment variables. The names are supplied in the `example.env` file. You'll also want to create a DBT profiles yml. An example file is included: `example.profiles.yml`.
-
-You'll also need to create two connections in Airflow for the APIs and add the API Keys in there as config.  
-
-Snowflake requires numerous objects to be created. Check the `include/snowflake` folder for the scripts.
