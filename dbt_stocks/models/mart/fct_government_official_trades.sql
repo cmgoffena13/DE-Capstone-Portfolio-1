@@ -27,6 +27,7 @@ SELECT
     t.transaction_type,
     t.security_ticker,
     t.security_name,
+    t.amount_value_bucket AS transaction_bucket,
     t.minimum_value AS transaction_miminum_value,
     t.median_value AS transaction_median_value,
     t.maximum_value AS transaction_maximum_value,

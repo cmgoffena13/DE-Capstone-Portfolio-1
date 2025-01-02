@@ -83,6 +83,12 @@ models:
         tests:
           - not_null
 
+      - name: transaction_bucket
+        data_type: varchar
+        description: "The value range provided in report"
+        tests:
+          - not_null
+
       - name: transaction_miminum_value
         data_type: number
         description: "Minimum value of the value range provided in report"
