@@ -39,6 +39,8 @@ This project combines stock information with government official's trading recor
 6. [Airflow Orchestration](#Airflow-Orchestration)
 7. [Efficiencies](#Efficiencies)
 8. [Snowflake Deletes](#Snowflake-Deletes)
+9. [Deployment](#Deployment)
+    1. [The Decision](#The-Decision)
 9. [Summary](#Summary)
 
 ## Introduction
@@ -308,6 +310,26 @@ INSERT INTO Table_A
 SELECT * FROM duplicate_holder;
 ```
 Pretty crazy, right? New technology is great, but the flexibility normally means other things were given up. I have not found a better way to do it yet, so if you know please tell me!
+
+## Deployment
+With the project being a containerized airflow instance, I had a couple options for deployment in AWS:  
+1. I could be old-fashioned and manually setup the docker containers on an EC2 instance. Turns out that the astro/airflow environment requires 2GB of memory, so that took it out of the Free Tier for me. Small version (1 CPU Core, 2GB memory) would be about $17 per month.
+2. I could utilize Elastic Container Service (ECS) and setup an EC2 instance to be a part of the cluster. This is the middle ground as it allows me to better utilize Docker while also setting my compute through my selection of the EC2 instance. I tried this out but realized I would need 2GB of memory, so same boat except easy deployments of the containers through a docker image.
+3. Utilize Elastic Container Service (ECS) with Fargate (serverless compute). This would allow me to only pay for resources I use. It sounds great since I only have a daily pipeline that averages 5 minutes, but setting up the docker volumes could be tricky since Fargate is designed for stateless services, similar to lambda function. Kept getting more complicated and more complicated. A sign that it probably wasn't a good option.
+ 
+Option #2 seemed to be the best option. Easy way to deploy an image as a task to the EC2 instance that is attached to the ECS cluster. I'll probably use Elastic Container Registry (ECR) for ease of use as well. Setting up a lifecylce policy to hold onto the latest two images, just in case I ever needed to rollback. 
+
+Pros:
+- Easy to set up volumes because docker handles it
+- Can access the airflow server easily since it's always up  
+  - Allows me to easily debug as well  
+
+Cons:
+- I'm charged per hour for server up-time, no way to save money
+- Hard to scale up, migrating means I would have to move the volumes if I wanted to maintain history.
+
+### The Decision
+Given I used the Astro CLI to easily set up the docker environment, I chose to check out Astronomer for deployment as well. They offered $300 credit and a 2 week free trial without providing a credit card. It appeared very similar to Option #2, but even easier and I get to try it out. So I decided to deploy using Astronomer. I'll go to AWS once the trial is over given Astronomer charges $0.35 per hour for developers. Sorry Astronomer, but I don't want to pay $252 a month for a personal airflow instance. Your CLI is great, but not that great. 
 
 ## Summary
 As you can see with the diversity of information and sections, not every data project is simple and easy; This was messy and challenging. Pivoting constantly with design, researching new technologies, and figuring out how to apply best practices and designs within their constraints. There are certainly more lessons learned than what is detailed here. This was the first time I really dove into DBT, AWS, Snowflake, Looker, Bash, & Airflow. I leaned on my knowledge of SQL, Python, Azure, PowerBI, & Powershell to translate my skills to new technologies and test my boundaries. It was a lot of fun!
