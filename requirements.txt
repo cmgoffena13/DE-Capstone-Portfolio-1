@@ -7,3 +7,4 @@ isort==5.13.2
 sqlfluff==3.3.0
 sqlfluff-templater-dbt==3.3.0
 pre_commit==4.0.1
+python-dotenv==1.0.1
