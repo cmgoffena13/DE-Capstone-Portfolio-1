@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# scripts
+push_to_aws.ps1
+
 # C extensions
 *.so
 

@@ -5,3 +5,4 @@ logs/
 .venv
 airflow.db
 airflow.cfg
+push_to_aws.ps1

@@ -316,16 +316,16 @@ With the project being a containerized airflow instance, I had a couple options 
 2. I could utilize Elastic Container Service (ECS) and setup an EC2 instance to be a part of the cluster. This is the middle ground as it allows me to better utilize Docker while also setting my compute through my selection of the EC2 instance. I tried this out but realized I would need 2GB of memory, so same boat except easy deployments of the containers through a docker image.
 3. Utilize Elastic Container Service (ECS) with Fargate (serverless compute). This would allow me to only pay for resources I use. It sounds great since I only have a daily pipeline that averages 5 minutes, but setting up the docker volumes could be tricky since Fargate is designed for stateless services, similar to lambda function. Kept getting more complicated and more complicated. A sign that it probably wasn't a good option.
  
-Option #2 was the best option. Easy way to deploy an image as a task to the EC2 instance that is attached to the ECS cluster. I'll am using Elastic Container Registry (ECR) for ease of use as well. Set up a lifecylce policy to hold onto the latest two images, just in case I ever needed to rollback. 
+Option #1 actually ended up being the best option due to its simplicity. The Astro CLI does not play friendly with anything else than astronomer and I found that out the hard way. Using astronomer ended up having an issue with their deploy command and it would have ended up being $250 a month or so. Nope. Ended up deploying to an EC2 instance and I was able to use SSH tunneling to still look at the Airflow webserver without exposing my server to the public. Score.
 
 Pros:
-- Easy to set up volumes because docker handles it
+- Easy to set up volumes because docker handles it on the EC2 instance
 - Can access the airflow server easily since it's always up  
   - Allows me to easily debug as well  
 
 Cons:
 - I'm charged per hour for server up-time, no way to save money
-- Hard to scale up, migrating means I would have to move the volumes if I wanted to maintain history.
+- Hard to scale up, migrating means I would have to move the volumes if I wanted to maintain history.  
 
 ## Summary
 As you can see with the diversity of information and sections, not every data project is simple and easy; This was messy and challenging. Pivoting constantly with design, researching new technologies, and figuring out how to apply best practices and designs within their constraints. There are certainly more lessons learned than what is detailed here. This was the first time I really dove into DBT, AWS, Snowflake, Looker, Bash, & Airflow. I leaned on my knowledge of SQL, Python, Azure, PowerBI, & Powershell to translate my skills to new technologies and test my boundaries. It was a lot of fun!
