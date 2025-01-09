@@ -11,18 +11,17 @@ WITH src_tickers AS (
 )
 
 SELECT
-    Active,
-    Base_Currency_Name,
-    Base_Currency_Symbol,
-    Currency_Name,
-    Currency_Symbol,
-    Last_Updated_UTC,
-    Locale,
-    Market,
-    Name,
-    Ticker,
+    active,
+    base_currency_name,
+    base_currency_symbol,
+    currency_name,
+    currency_symbol,
+    last_updated_utc,
+    locale,
+    market,
+    name,
+    ticker,
     --Row_Hash,
     watermark_timestamp
 FROM src_tickers
-
 {% endsnapshot %}

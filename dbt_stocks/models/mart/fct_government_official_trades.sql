@@ -6,12 +6,15 @@
 WITH int_gov_officials AS (
     SELECT * FROM {{ ref('int_gov_officials') }}
 ),
+
 int_gov_official_trades AS (
     SELECT * FROM {{ ref('int_gov_official_trades') }}
 ),
+
 int_market AS (
     SELECT * FROM {{ ref('int_market') }}
 )
+
 SELECT
     g.member_id,
     g.chamber,
@@ -37,12 +40,13 @@ SELECT
     m.stock_low,
     m.stock_close,
     m.stock_volume,
-    t.Is_Purchase,
-    t.Is_Sale,
+    t.is_purchase,
+    t.is_sale,
     g.state_iso_format
 FROM int_gov_official_trades AS t
 LEFT JOIN int_gov_officials AS g
-    ON g.member_id = t.member_id
+    ON t.member_id = g.member_id
 LEFT JOIN int_market AS m
-    ON m.date_recorded = t.transaction_date
-    AND m.ticker = t.security_ticker
+    ON
+        t.transaction_date = m.date_recorded
+        AND t.security_ticker = m.ticker

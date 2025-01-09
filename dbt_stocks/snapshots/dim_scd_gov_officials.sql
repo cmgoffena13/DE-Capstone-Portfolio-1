@@ -21,5 +21,4 @@ SELECT
     leadership_positions,
     member_updated_utc
 FROM int_gov_officials
-
 {% endsnapshot %}

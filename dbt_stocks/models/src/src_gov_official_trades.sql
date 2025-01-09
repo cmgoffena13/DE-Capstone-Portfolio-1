@@ -6,6 +6,7 @@
 WITH raw_gov_official_trades AS (
     SELECT * FROM {{ source('stock', 'gov_official_trades') }}
 )
+
 /*
 Remove non-analytical columns, such as URLs and fix blanks space issues
 */
@@ -28,18 +29,20 @@ SELECT
     --website,
     trade_record_id,
     notification_date,
-    CASE WHEN ownership = '' THEN NULL ELSE ownership END AS ownership,
     report_date,
     report_id,
     security_name,
-    CASE WHEN security_ticker = '' THEN NULL 
-         WHEN LENGTH(security_ticker) > 0 THEN security_ticker
-         ELSE NULL END AS security_ticker,
-    CASE WHEN security_type = '' THEN NULL 
-         WHEN LENGTH(security_type) > 0 THEN security_type
-         ELSE NULL END AS security_type,
     transaction_date,
     transaction_id,
     transaction_type,
-    record_updated
+    record_updated,
+    CASE WHEN ownership = '' THEN NULL ELSE ownership END AS ownership,
+    CASE
+        WHEN security_ticker = '' THEN NULL
+        WHEN LENGTH(security_ticker) > 0 THEN security_ticker
+    END AS security_ticker,
+    CASE
+        WHEN security_type = '' THEN NULL
+        WHEN LENGTH(security_type) > 0 THEN security_type
+    END AS security_type
 FROM raw_gov_official_trades
