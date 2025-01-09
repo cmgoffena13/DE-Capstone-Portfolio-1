@@ -23,7 +23,7 @@ def check_triggered_dag_result(ti):
 
 
 @dag(
-    start_date=datetime(2024, 1, 7),
+    start_date=datetime(2024, 1, 1),
     schedule="@daily",
     catchup=False,
     default_args=default_args,
