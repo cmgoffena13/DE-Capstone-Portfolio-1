@@ -32,6 +32,9 @@ def stock_government_trades():
         url = f"{api.host}{endpoint}&date={ds}&token={api_key}"
 
         response = requests.get(url=url)
+        if response.status_code != 200:
+            print(response.text)
+
         condition = bool(response.status_code == 200)
         return condition
 
