@@ -24,8 +24,8 @@ jobs:
 
       - name: Run Continuous Integration - sqlfluff
         run: |
-        cd path/to/your/sql/directory
-        sqlfluff lint
+          cd dbt_stocks
+          sqlfluff fix .
 
       - name: Run Continuous Integation - flake8
         run: flake8 .
