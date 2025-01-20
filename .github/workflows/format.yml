@@ -23,9 +23,8 @@ jobs:
         run: black .
 
       - name: Run Continuous Integration - sqlfluff
-        run: |
-          cd dbt_stocks
-          sqlfluff fix .
+        working-directory: /dbt_stocks
+        run: sqlfluff fix .
 
       - name: Run Continuous Integation - flake8
         run: flake8 .
