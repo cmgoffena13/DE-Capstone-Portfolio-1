@@ -14,7 +14,7 @@ jobs:
           python-version: 3.10.11
 
       - name: Install Dependencies
-        run: pip install isort black sqlfluff flake8
+        run: pip install isort black sqlfluff flake8 security
 
       - name: Run Continuous Integration - isort
         run: isort .
@@ -29,3 +29,8 @@ jobs:
 
       - name: Run Continuous Integation - flake8
         run: flake8 .
+
+      - name: Run Continuous Integration - safety
+        uses: pyupio/safety-action@v1
+        with:
+          api-key: ${{ secrets.SAFETY_API_KEY }}
