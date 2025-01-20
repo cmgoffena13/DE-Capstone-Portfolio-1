@@ -49,7 +49,13 @@ SELECT
                 ''
             )
         )
-        + TO_NUMBER(REPLACE(REPLACE(REGEXP_SUBSTR(g.amount, '\\$[0-9,]+', 1, 1), '$', ''), ',', ''))
+        + TO_NUMBER(
+            REPLACE(
+                REPLACE(REGEXP_SUBSTR(g.amount, '\\$[0-9,]+', 1, 1), '$', ''),
+                ',',
+                ''
+            )
+        )
     ) / 2) AS median_value,
     CASE
         WHEN g.transaction_type = 'P' THEN 'Purchase'

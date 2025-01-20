@@ -1,0 +1,31 @@
+name: Format
+on: [push, pull_request]
+
+jobs:
+  format-python:
+    runs-on: ubunut-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.10.11
+
+      - name: Install Dependencies
+        run: pip install isort black sqlfluff flake8
+
+      - name: Run Continuous Integration - isort
+        run: isort .
+
+      - name: Run Continous Integration - black
+        run: black .
+
+      - name: Run Continuous Integration - sqlfluff
+        run: |
+        cd path/to/your/sql/directory
+        sqlfluff lint
+
+      - name: Run Continuous Integation - flake8
+        run: flake8 .
