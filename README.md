@@ -3,7 +3,7 @@
 This project combines stock information with government official's trading records (Senate & House of Representatives). Daily batch processing brings in data from the Polygon and Benzinga APIs to showcase trading information. Explore how your state representatives are trading, approximate amounts that are traded, and what committees they are on that may influence their decisions...
 
 [![build](https://github.com/cmgoffena13/DE-Capstone-Portfolio-1/actions/workflows/format.yml/badge.svg)](https://github.com/cmgoffena13/DE-Capstone-Portfolio-1/actions/workflows/format.yml)
-![linesofcode](https://aschey.tech/tokei/github/cmgoffena13/DE-Capstone-Portfolio-1?category=code) ![views](https://hitcounter.pythonanywhere.com/count/tag.svg?url=https://github.com/cmgoffena13/DE-Capstone-Portfolio-1)
+![linesofcode](https://aschey.tech/tokei/github/cmgoffena13/DE-Capstone-Portfolio-1?category=code)
 ## Technologies Used
  ![Docker](https://img.shields.io/badge/-Docker-2496ED?style=flat&logoColor=white&logo=docker)
  ![Python](https://img.shields.io/badge/-Python-0077B5?style=flat&logoColor=white&logo=python)
